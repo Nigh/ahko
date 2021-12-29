@@ -1,9 +1,9 @@
 
 FileEncoding("UTF-8")
-appName:="auto upgrader"
-version:="0.2.2"
+appName:="ahko"
+version:="0.0.1"
 versionFilename:="version.txt"
 ahkFilename:="app.ahk"
-binaryFilename:="app.exe"
-downloadFilename:="app.zip"
-downloadUrl:="/Nigh/ahk-autoupdate-template/releases/latest/download/"
+binaryFilename:="ahko.exe"
+downloadFilename:="ahko.zip"
+downloadUrl:="/Nigh/ahko/releases/latest/download/"

@@ -1,5 +1,6 @@
 ﻿
 SetWorkingDir(A_ScriptDir)
+#Warn Unreachable, Off
 #SingleInstance force
 #include meta.ahk
 
@@ -34,12 +35,7 @@ OnExit(trueExit)
 ; ===============================================================
 ; your code below
 
-mygui:=Gui("-DPIScale -AlwaysOnTop -Owner +OwnDialogs")
-mygui.SetFont("s32 Q5", "Verdana")
-mygui.Add("Text","w640 Center","AHKv2-AutoUpdate-Template")
-mygui.SetFont("s12 Q5", "Verdana")
-mygui.Add("Text","w640 Center","v" . version)
-mygui.Show()
+#include ahko.ahk
 Return
 
 GuiClose:

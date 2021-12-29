@@ -7,7 +7,7 @@ setTray()
 		Run("https://ko-fi.com/xianii")
 	}
 	pages(ItemName, ItemPos, MyMenu){
-		Run("https://github.com/Nigh/ahk-autoupdate-template")
+		Run("https://github.com/Nigh/ahko")
 	}
 	donothing(ItemName, ItemPos, MyMenu){
 	}
