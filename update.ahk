@@ -95,14 +95,16 @@ updateReady(){
 					Run("updater.exe")
 					ExitApp
 				} catch as e {
-					MsgBox("An exception was thrown!`nSpecifically: " . e.Message,"Upgrade failed",16)
+					TrayTip "An exception was thrown!`nSpecifically: " . e.Message, "upgrade failed", 0x3
+					; MsgBox("An exception was thrown!`nSpecifically: " . e.Message,"Upgrade failed",16)
 				}
 			}
 		} else {
 			todayUpdated()
 		}
 	} else {
-        MsgBox("Status=" req.status,"Update failed",16)
+		TrayTip "Status=" req.status, "update failed", 0x3
+        ; MsgBox("Status=" req.status,"Update failed",16)
 	}
 }
 
