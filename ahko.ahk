@@ -2,10 +2,39 @@
 SetWorkingDir A_ScriptDir
 Persistent
 
+path:=IniRead("setting.ini", "dir", "path", "")
+hotkeys:=IniRead("setting.ini", "hotkey", "key", "#q")
+uiType:=IniRead("setting.ini", "ui", "type", "1")
 
-path:=IniRead("setting.ini", "dir", "path")
-; if()
-TrayTip "Start at " path, "ahko", 0x14
+#include ahko_setup_gui.ahk
+
+customTrayMenu:={valid:true}
+customTrayMenu.menu:=[]
+customTrayMenu.menu.push({name:"Setup",func:ahko_setup_show})
+
+setupWatchFolder(*)
+{
+	newpath:=RegExReplace(DirSelect(,0), "\\$")
+	if(newpath!="") {
+		IniWrite("path=" newpath,"setting.ini", "dir")
+		Reload
+	}
+}
+
+if(!DirExist(path)) {
+	; MsgBox("ahko watch folder not set.`nPlease select which folder to watch.")
+	; path:=RegExReplace(DirSelect(,0), "\\$")
+	; if(path="") {
+	; 	MsgBox("No valid folder selected`nahko is going to exit.",,"T3")
+	; 	Exitapp
+	; }
+	; IniWrite("path=" path,"setting.ini", "dir")
+	ahko_setup_show()
+	Return
+}
+
+TrayTip "ahko start at " path, "ahko", 0x14
+Hotkey hotkeys, ahko_show, "On"
 
 ahko := []
 Loop files path "\*", "FD"
@@ -17,7 +46,7 @@ Loop files path "\*", "FD"
 		Loop files A_LoopFileFullPath "\*", "FD"
 		{
 			if(InStr(A_LoopFileAttrib,"D")){
-				local_name := "[D]" A_LoopFileName
+				local_name := "[D] " A_LoopFileName
 			} else {
 				local_name := A_LoopFileName
 				if(local_name == "_icon.png") {
@@ -27,43 +56,19 @@ Loop files path "\*", "FD"
 			}
 			item_count += 1
 			ahko[-1].sub.Push({name:local_name,attrib:A_LoopFileAttrib,path:A_LoopFileFullPath})
+			if(A_Index >= 16){
+				Break
+			}
 		}
-		ahko[-1].name := A_LoopFileName "[" item_count "]"
+		ahko[-1].name := A_LoopFileName " [" item_count "]"
 	} else {
 		ahko.Push({name:A_LoopFileName,attrib:A_LoopFileAttrib,path:A_LoopFileFullPath})
 	}
-}
-
-
-; icon support format: ICO, CUR, ANI, EXE, DLL, CPL, SCR
-ahko_menu := Menu()
-ahko_menu_sub:=[]
-For , layer0 in ahko
-{
-	if(InStr(layer0.attrib, "D")){
-		ahko_menu_sub.Push(Menu())
-		For , layer1 in layer0.sub
-		{
-			ahko_menu_sub[-1].add(layer1.name, ahko_go)
-			iconPath:=fileGetIcon(layer1.path)
-			if(iconPath){
-				Try{
-					ahko_menu_sub[-1].setIcon(layer1.name, iconPath)
-				}Catch as e{
-					; MsgBox("Err:" e.Message "`norigin:" layer1.path "`nicon:" iconPath)
-				}
-			}
-		}
-		ahko_menu.add(layer0.name, ahko_menu_sub[-1])
-		if(layer0.HasOwnProp("icon") && layer0.icon) {
-			ahko_menu.setIcon(layer0.name, layer0.icon)
-		}
-	} else {
-		ahko_menu_sub.Push("")
-		ahko_menu.add(layer0.name, ahko_go)
+	if(A_Index >= 16){
+		Break
 	}
 }
-Return
+
 
 fileGetIcon(file)
 {
@@ -79,35 +84,5 @@ fileGetIcon(file)
 	Return ""
 }
 
-#q::ahko_menu.Show()
-
-
-ahko_go(ItemName, ItemPos, MyMenu)
-{
-	global ahko, ahko_menu, ahko_menu_sub
-
-	if(MyMenu==ahko_menu) {
-		For , item in ahko
-		{
-			if(item.name == ItemName) {
-				SplitPath(item.path,,&atDir)
-				Run(item.path, atDir)
-				Return
-			}
-		}
-	} else {
-		For index, menus in ahko_menu_sub
-		{
-			if(MyMenu==menus) {
-				For ,item in ahko[index].sub
-				{
-					if(item.name == ItemName) {
-						SplitPath(item.path,,&atDir)
-						Run(item.path, atDir)
-						Return
-					}
-				}
-			}
-		}
-	}
-}
+#Include ahko_ui.ahk
+ahko_init()
