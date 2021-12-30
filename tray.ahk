@@ -2,7 +2,7 @@
 
 setTray()
 {
-	global version, trueExit
+	global version, trueExit, customTrayMenu
 	donate(ItemName, ItemPos, MyMenu){
 		Run("https://ko-fi.com/xianii")
 	}
@@ -18,6 +18,13 @@ setTray()
 	tray.delete
 	tray.add("v" . version, donothing)
 	tray.add()
+	if(customTrayMenu.HasOwnProp("valid") && customTrayMenu.HasOwnProp("menu")) {
+		For , Value in customTrayMenu.menu
+		{
+			tray.add(Value.name, Value.func)
+		}
+		tray.add()
+	}
 	tray.add("Github 页面", pages)
 	tray.add("Donate 捐助", donate)
 	tray.add("Exit", trayExit)

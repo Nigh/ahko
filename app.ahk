@@ -28,7 +28,6 @@ if(0)
 	UAC()
 }
 #include update.ahk
-setTray()
 OnExit(trueExit)
 
 ; ===============================================================
@@ -36,6 +35,7 @@ OnExit(trueExit)
 ; your code below
 
 #include ahko.ahk
+setTray()
 Return
 
 GuiClose:
