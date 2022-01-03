@@ -45,7 +45,7 @@ catch as e
 
 try
 {
-	RunWait("ahk2exe.exe /in " ahkFilename " /out " binaryFilename " /base `"" A_AhkPath "`" /icon icon.ico /compress 1")
+	RunWait("ahk2exe.exe /in " ahkFilename " /out " binaryFilename " /base `"" A_AhkPath "`" /compress 1")
 }
 catch as e
 {

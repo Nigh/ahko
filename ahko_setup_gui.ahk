@@ -52,6 +52,12 @@ ahko_setup.SetFont("s10")
 ahko_setup.Add("Text", "xs y+5", "Hotkey is ")
 ahkoSetup_hotkeyText:=ahko_setup.Add("Text", "x+0 hp cc07070 w260", "")
 
+ahko_setup.SetFont(h2FontStyle)
+ahko_setup.Add("Text", "xs y+30", "Startup")
+ahko_setup.SetFont(textFontStyle)
+ahkoSetup_autoStart:=ahko_setup.Add("CheckBox", "y+10 hp", "startup with Windows")
+ahkoSetup_autoStart.OnEvent("Click", autoStartup_update)
+
 ahko_setup.SetFont(textFontStyle)
 saveBtn := ahko_setup.Add("Button", "xs y+50 h50 w" (clientWidth-40)//2, "Save")
 saveBtn.OnEvent("Click", ahko_setup_save)
@@ -87,12 +93,20 @@ ahko_setup_show(*) {
 	ahkoSetup_hotkey.Value:=RegExReplace(hotkeys, "#")
 	ahkoSetup_hotkeyWin.Value:=RegExMatch(hotkeys, "#")
 	hotkeyText_update()
+	local autostart:=RegRead("HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run","ahko","")
+	if(autostart!="") {
+		ahkoSetup_autoStart.Value:=1
+	} else {
+		ahkoSetup_autoStart.Value:=0
+	}
 	ahko_setup.show("w" clientWidth+60)
 }
 ahko_setup_cancel(*) {
 	global
 	ahko_setup.Hide()
 }
+
+; TODO: 未改动设置时无需重启
 ahko_setup_save(*) {
 	global
 	if(ahko_setup_check())
@@ -127,5 +141,29 @@ ahko_setup_check(*) {
 	}
 	Return true
 }
+
+ahko_setup_autostart(b){
+	global
+;@Ahk2Exe-IgnoreBegin
+	MsgBox("Only compiled script could be set auto start !","Error","Owner" ahko_setup.Hwnd)
+	Return
+;@Ahk2Exe-IgnoreEnd
+	DirCreate(A_Temp "\ahko_temp")
+	FileInstall(".\set_auto_run\startup.exe", A_Temp "\ahko_temp\startup.exe",1)
+	if(b) {
+		runwait(A_Temp "\ahko_temp\startup.exe --name=ahko --target=" A_ScriptFullPath)
+	} else {
+		runwait(A_Temp "\ahko_temp\startup.exe --name=ahko --remove")
+	}
+	try {
+		FileDelete(A_Temp "\ahko_temp\startup.exe")
+	}
+}
+autoStartup_update(*)
+{
+	global
+	ahko_setup_autostart(ahkoSetup_autoStart.Value)
+}
+
 ; ahko_setup_show()
 
