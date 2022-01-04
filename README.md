@@ -1,10 +1,18 @@
 # ahko
 
-![](./assets/screenshot.png)
-
 > tested with Autohotkey 2.0-beta.3 on Windows 10
 
 ahko is a quick launcher for windows.
+
+## Screenshots
+
+### Gridview :
+
+![](./assets/screenshot_gridview.png)
+
+### Listview :
+
+![](./assets/screenshot_listview.png)
 
 ## Setup
 
