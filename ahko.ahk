@@ -22,13 +22,6 @@ setupWatchFolder(*)
 }
 
 if(!DirExist(path)) {
-	; MsgBox("ahko watch folder not set.`nPlease select which folder to watch.")
-	; path:=RegExReplace(DirSelect(,0), "\\$")
-	; if(path="") {
-	; 	MsgBox("No valid folder selected`nahko is going to exit.",,"T3")
-	; 	Exitapp
-	; }
-	; IniWrite("path=" path,"setting.ini", "dir")
 	ahko_setup_show()
 	Return
 }
@@ -37,52 +30,57 @@ TrayTip "ahko start at " path, "ahko", 0x14
 Hotkey hotkeys, ahko_show, "On"
 
 ahko := []
-Loop files path "\*", "FD"
+ahko_init(&ahko, path)
 {
-	; MsgBox(A_LoopFileName " " A_LoopFileExt "`n" A_LoopFileAttrib)
-	if(InStr(A_LoopFileAttrib,"D")){
-		ahko.Push({name:"",attrib:A_LoopFileAttrib,path:A_LoopFileFullPath,sub:[]})
-		item_count := 0
-		Loop files A_LoopFileFullPath "\*", "FD"
-		{
-			if(InStr(A_LoopFileAttrib,"D")){
-				local_name := "[D] " A_LoopFileName
-			} else {
-				local_name := A_LoopFileName
-				if(local_name == "_icon.png") {
+	Loop files path "\*", "FD"
+	{
+		ahko.Push({name:A_LoopFileName,attrib:A_LoopFileAttrib,path:A_LoopFileFullPath,sub:[],icon:""})
+		if(InStr(A_LoopFileAttrib,"D")){
+			local icon_map:=Map()
+			local target_count:=0
+			Loop files A_LoopFileFullPath "\*", "FD"
+			{
+				if(A_LoopFileName == "_icon.png") {
 					ahko[-1].icon := A_LoopFileFullPath
 					Continue
 				}
+				if(RegExMatch(A_LoopFileName,"(.+)\.png$",&iconFileName)) {
+					icon_map.set(iconFileName[1], A_LoopFileFullPath)
+					Continue
+				}
+				if(target_count >= 16){
+					Continue
+				}
+				ahko[-1].sub.Push({name:A_LoopFileName,attrib:A_LoopFileAttrib,path:A_LoopFileFullPath,icon:""})
+				target_count+=1
 			}
-			item_count += 1
-			ahko[-1].sub.Push({name:local_name,attrib:A_LoopFileAttrib,path:A_LoopFileFullPath})
-			if(A_Index >= 16){
-				Break
+			for k,v in ahko[-1].sub
+			{
+				if(icon_map.Has(v.name)){
+					v.icon := icon_map.Get(v.name)
+				}
 			}
 		}
-		ahko[-1].name := A_LoopFileName " [" item_count "]"
-	} else {
-		ahko.Push({name:A_LoopFileName,attrib:A_LoopFileAttrib,path:A_LoopFileFullPath})
-	}
-	if(A_Index >= 16){
-		Break
+		if(A_Index >= 16){
+			Break
+		}
 	}
 }
+ahko_init(&ahko, path)
 
-
-fileGetIcon(file)
+fileGethIcon(file)
 {
-	SplitPath(file, &filename,,&ext)
-	if(ext="lnk"){
-		FileGetShortcut(file, &target)
-		file := target
-		SplitPath(file, &filename,,&ext)
-	}
-	if(RegExMatch(ext,"i)^(ICO|CUR|ANI|EXE|DLL|CPL|SCR)$")){
-		return file
-	}
-	Return ""
+	fileinfo := Buffer(fisize := A_PtrSize + 688)
+	; Get the file's icon.
+    if DllCall("shell32\SHGetFileInfoW", "WStr", file
+        , "UInt", 0, "Ptr", fileinfo, "UInt", fisize, "UInt", 0x100)
+    {
+        hicon := NumGet(fileinfo, 0, "Ptr")
+		Return "HICON:" hicon
+    }
+	Return
 }
 
 #Include ahko_ui.ahk
-ahko_init()
+ahko_ui_init()
+

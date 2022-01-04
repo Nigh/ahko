@@ -23,10 +23,10 @@ outputVersion(){
 	}
 }
 
-update_log:="
-(
-text your update log here
-)"
+; update_log:="
+; (
+; text your update log here
+; )"
 
 lastUpdate:=IniRead("setting.ini", "update", "last", 0)
 autoUpdate:=IniRead("setting.ini", "update", "autoupdate", 1)
@@ -40,7 +40,7 @@ if(autoUpdate) {
 		version_str:=IniRead("setting.ini", "update", "ver", "0")
 		if(version_str!=version) {
 			IniWrite(version, "setting.ini", "update", "ver")
-			MsgBox(version . "`nUpdate log`n`n" . update_log)
+			; MsgBox(version . "`nUpdate log`n`n" . update_log)
 		}
 	}
 } else {

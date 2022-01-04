@@ -21,9 +21,9 @@ ahko_setup.SetFont(textFontStyle)
 ahkoSetup_uiType:=ahko_setup.Add("DropDownList", "y+10 w" clientWidth, ["Listview","Gridview","Gridview(Gdip)"])
 ahkoSetup_uiType.OnEvent("Change", uiType_update)
 uiType_update(*) {
-	if(ahkoSetup_uiType.Value!="1") {
+	if(ahkoSetup_uiType.Value>2) {
 		MsgBox("This ui type is still under development","OK","Owner" ahko_setup.Hwnd)
-		ahkoSetup_uiType.Value := 1
+		ahkoSetup_uiType.Value := 2
 	}
 }
 ahko_setup.SetFont(h2FontStyle)
