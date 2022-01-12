@@ -3,8 +3,8 @@ SetWorkingDir A_ScriptDir
 Persistent
 
 path:=IniRead("setting.ini", "dir", "path", "")
-hotkeys:=IniRead("setting.ini", "hotkey", "key", "#q")
-uiType:=IniRead("setting.ini", "ui", "type", "1")
+hotkeys:=IniRead("setting.ini", "hotkey", "key", "!q")
+uiType:=IniRead("setting.ini", "ui", "type", "2")
 
 #include ahko_setup_gui.ahk
 
@@ -27,14 +27,13 @@ if(!DirExist(path)) {
 }
 
 TrayTip "ahko start at " path, "ahko", 0x14
-Hotkey hotkeys, ahko_show, "On"
 
 ahko := []
 ahko_init(&ahko, path)
 {
 	Loop files path "\*", "FD"
 	{
-		ahko.Push({name:A_LoopFileName,attrib:A_LoopFileAttrib,path:A_LoopFileFullPath,sub:[],icon:""})
+		ahko.Push({name:filenameWithoutExt(A_LoopFileName),attrib:A_LoopFileAttrib,path:A_LoopFileFullPath,sub:[],icon:""})
 		if(InStr(A_LoopFileAttrib,"D")){
 			local icon_map:=Map()
 			local target_count:=0
@@ -51,7 +50,7 @@ ahko_init(&ahko, path)
 				if(target_count >= 16){
 					Continue
 				}
-				ahko[-1].sub.Push({name:A_LoopFileName,attrib:A_LoopFileAttrib,path:A_LoopFileFullPath,icon:""})
+				ahko[-1].sub.Push({name:filenameWithoutExt(A_LoopFileName),attrib:A_LoopFileAttrib,path:A_LoopFileFullPath,icon:""})
 				target_count+=1
 			}
 			for k,v in ahko[-1].sub
@@ -67,7 +66,11 @@ ahko_init(&ahko, path)
 	}
 }
 ahko_init(&ahko, path)
-
+filenameWithoutExt(name)
+{
+	SplitPath(name,,,,&outname)
+	Return outname
+}
 fileGethIcon(file)
 {
 	fileinfo := Buffer(fisize := A_PtrSize + 688)
@@ -83,4 +86,5 @@ fileGethIcon(file)
 
 #Include ahko_ui.ahk
 ahko_ui_init()
+Hotkey hotkeys, ahko_show, "On"
 
