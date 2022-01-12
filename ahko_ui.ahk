@@ -6,11 +6,22 @@ ahko_show(*)
 		ahko_listview.Show()
 	}
 	if(uiType=="2") {
-		ahko_grid.Show()
+		For , g in ahko_grid_sub
+		{
+			Try{
+				if not g.isHide
+				{
+					g.uhide()
+				}
+			}
+		}
+		ahko_grid.uShow()
 		if(!winwait("ahk_id " ahko_grid.hwnd,,3)){
 			Return
 		}
-		WinActivate("ahk_id " ahko_grid.hwnd)
+		Try{
+			WinActivate("ahk_id " ahko_grid.hwnd)
+		}
 		SetTimer(gridWaitNotActive, 150)
 	}
 }
@@ -19,7 +30,7 @@ gridWaitNotActive()
 	global ahko_grid
 	if(!WinActive("ahk_id " ahko_grid.hwnd)) {
 		Try {
-			ahko_grid.Hide()
+			ahko_grid.uHide()
 		}
 		SetTimer(gridWaitNotActive, 0)
 	}

@@ -37,7 +37,9 @@ ahko_listview_init(ahko)
 listview_run_maker(file) {
 	runner(*) {
 		SplitPath(file,,&atDir)
-		Run(file, atDir)
+		Try{
+			Run(file, atDir)
+		}
 	}
 	return runner
 }

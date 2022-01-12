@@ -1,10 +1,13 @@
 
 
-gridOpt:="+AlwaysOnTop -DPIScale"
+#Include ahko_gridview_hotkey.ahk
+
+gridOpt:="+AlwaysOnTop -DPIScale +Owner"
 ahko_grid := Gui(gridOpt)
+gui_user_bind(ahko_grid)
 ahko_gridview_init(ahko)
 {
-	global ahko_grid, gridOpt
+	global ahko_grid, gridOpt, ahko_grid_sub, subgridGroup
 	local position:=Array(
 		{x:0,y:0},{x:1,y:0},{x:2,y:0},
 		{x:0.5,y:1},{x:1.5,y:1},{x:2.5,y:1},
@@ -14,21 +17,28 @@ ahko_gridview_init(ahko)
 	local buttonSize:=200
 	local outerIndex:=1
 	local gmargin:=10
+	local titleHeight:=40
 
-	
 	gridview_presetup(ahko_grid)
+	ahko_grid.add("Button", "w" buttonSize " h" titleHeight " x0 y1 left", " ahko")
+
 	; ahko_grid.MarginX:=10, ahko_grid.MarginY:=10
 	ahko_grid_sub:=[]
 	For , layer0 in ahko
 	{
 		if(InStr(layer0.attrib, "D")) {
 			ahko_grid_sub.Push(Gui(gridOpt))
+			gui_user_bind(ahko_grid_sub[-1])
+			GroupAdd("subgridGroup", "ahk_id " ahko_grid_sub[-1].Hwnd)
 			gridview_presetup(ahko_grid_sub[-1])
+			btn:=ahko_grid_sub[-1].add("Button", "w" buttonSize " h" titleHeight " x0 y1 left", " " layer0.name)
+			btn.OnEvent("Click", ahko_show)
 			local subIndex:=1
 			For , layer1 in layer0.sub
 			{
-				btn:=ahko_grid_sub[-1].add("Button", "w" buttonSize " h" buttonSize " x" position[subIndex].x*(buttonSize+gmargin) " y" position[subIndex].y*(buttonSize+gmargin), layer1.name)
-				btn.OnEvent("Click", gridview_run_maker(layer1.path, ahko_grid_sub[-1]))
+				btn:=ahko_grid_sub[-1].add("Button", "w" buttonSize " h" buttonSize " x" position[subIndex].x*(buttonSize+gmargin) " y" position[subIndex].y*(buttonSize+gmargin)+titleHeight+gmargin, layer1.name "`n<&" StrUpper(hotkeyList[subIndex]) ">")
+				ahko_grid_sub[-1].btnCall.Push(gridview_run_maker(layer1.path, ahko_grid_sub[-1]))
+				btn.OnEvent("Click", ahko_grid_sub[-1].btnCall[-1])
 				iconPath:=layer1.icon Or fileGethIcon(layer1.path)
 				if(iconPath){
 					Try{
@@ -39,11 +49,13 @@ ahko_gridview_init(ahko)
 			}
 			gridview_postsetup(ahko_grid_sub[-1])
 
-			local folder_name:=layer0.name "`n[" subIndex-1 "]"
-			btn:=ahko_grid.add("Button", "w" buttonSize " h" buttonSize " x" position[outerIndex].x*(buttonSize+gmargin) " y" position[outerIndex].y*(buttonSize+gmargin), folder_name)
+			local folder_name:=layer0.name "-[" subIndex-1 "]`n<&" StrUpper(hotkeyList[outerIndex]) ">"
+			btn:=ahko_grid.add("Button", "w" buttonSize " h" buttonSize " x" position[outerIndex].x*(buttonSize+gmargin) " y" position[outerIndex].y*(buttonSize+gmargin)+titleHeight+gmargin, folder_name)
 			if(subIndex>1) {
-				btn.OnEvent("Click", gridview_show_maker(ahko_grid_sub[-1]))
+				ahko_grid.btnCall.Push(gridview_show_maker(ahko_grid_sub[-1]))
+				btn.OnEvent("Click", ahko_grid.btnCall[-1])
 			} else {
+				ahko_grid.btnCall.Push("")
 				btn.Opt("Disabled")
 			}
 			iconPath:=layer0.icon Or fileGethIcon(layer0.path)
@@ -61,13 +73,31 @@ ahko_gridview_init(ahko)
 		}
 	}
 	gridview_postsetup(ahko_grid)
+	gridview_hotkey_init()
+}
+gui_user_bind(g)
+{
+	uHide(*) {
+		g.isHide:=True
+		g.Hide()
+	}
+	uShow(*) {
+		g.isHide:=False
+		g.Show()
+	}
+	g.btnCall:=[]
+	g.isHide:=True
+	g.uShow := uShow
+	g.uHide := uHide
 }
 gridview_run_maker(file, grid:="")
 {
 	runner(*) {
-		grid!="" ? grid.Hide() : ()=>{}
+		grid!="" ? grid.uHide() : ()=>{}
 		SplitPath(file,,&atDir)
-		Run(file, atDir)
+		Try{
+			Run(file, atDir)
+		}
 	}
 	return runner
 }
@@ -76,15 +106,15 @@ gridview_show_maker(grid)
 	gridAutoHide() {
 		if(!WinActive("ahk_id " grid.Hwnd)) {
 			Try {
-				grid.Hide()
+				grid.uHide()
 			}
 			settimer(gridAutoHide, 0)
 		}
 	}
 	shower(*) {
 		global ahko_grid
-		ahko_grid.Hide()
-		grid.Show()
+		ahko_grid.uHide()
+		grid.uShow()
 		settimer(gridAutoHide, 150)
 	}
 	return shower

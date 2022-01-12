@@ -4,7 +4,27 @@ SetWorkingDir(A_ScriptDir)
 #SingleInstance force
 #include meta.ahk
 
+;@Ahk2Exe-SetCompanyName HelloWorks
+;@Ahk2Exe-SetName %appName%
+;@Ahk2Exe-SetDescription ahko
+;@Ahk2Exe-SetVersion %version%
+;@Ahk2Exe-SetMainIcon icon.ico
+;@Ahk2Exe-ExeName %appName%
+
 ;@Ahk2Exe-IgnoreBegin
+if A_Args.Length > 0
+{
+	for n, param in A_Args
+	{
+		RegExMatch(param, "--out=(\w+)", &outName)
+		if(outName[1]=="version") {
+			f := FileOpen(versionFilename,"w","UTF-8-RAW")
+			f.Write(version)
+			f.Close()
+			ExitApp
+		}
+	}
+}
 _exit(ThisHotkey){
 	ExitApp
 }
@@ -14,13 +34,6 @@ _reload(ThisHotkey){
 Hotkey("F5", _exit)
 Hotkey("F6", _reload)
 ;@Ahk2Exe-IgnoreEnd
-
-outputVersion()
-
-if A_IsCompiled
-debug:=0
-Else
-debug:=1
 
 ; if you need admin privilege, enable it.
 if(0)
