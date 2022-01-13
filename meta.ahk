@@ -1,7 +1,7 @@
 
 FileEncoding("UTF-8")
 appName:="ahko"
-version:="0.2.1"
+version:="0.2.2"
 versionFilename:="version.txt"
 ahkFilename:="app.ahk"
 binaryFilename:="ahko.exe"
@@ -11,4 +11,6 @@ update_log:="
 (
 1. Optimised upgrade process
 2. Hotkeys have been added to gridview
+3. bug fix
+4. better update process
 )"
