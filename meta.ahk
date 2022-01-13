@@ -1,7 +1,7 @@
 
 FileEncoding("UTF-8")
 appName:="ahko"
-version:="0.2.0"
+version:="0.2.1"
 versionFilename:="version.txt"
 ahkFilename:="app.ahk"
 binaryFilename:="ahko.exe"
