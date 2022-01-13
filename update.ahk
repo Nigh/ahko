@@ -32,10 +32,16 @@ if(autoUpdate) {
 	TrayTip "Update Skiped`n`nCurrent version`nv" version,"Update", 1
 }
 
+updateTimeout(*)
+{
+	tryNextUpdate()
+	Return
+}
+
 get_latest_version(){
 	global
 	req := ComObject("MSXML2.ServerXMLHTTP")
-	updateMirror:=IsNumber(updateMirror)?updateMirror+0:0
+	updateMirror:=IsNumber(updateMirror)?updateMirror+0:1
 	if(updateMirror > mirrorList.Length or updateMirror <= 0) {
 		updateMirror := 1
 	}
@@ -45,8 +51,35 @@ get_latest_version(){
 	req.open("GET", mirrorList[updateMirror] . downloadUrl . versionFilename, true)
 	req.onreadystatechange := updateReady
 	req.send()
+	SetTimer(updateTimeout, -10000)
+	Return
+
 }
 
+tryNextUpdate()
+{
+	global mirrorList, updateMirror, updatemirrorTried
+	SetTimer(updateTimeout, 0)
+	updatemirrorTried.Push(updateMirror)
+	For k, v in mirrorList
+	{
+		local tested
+		tested:=False
+		for , p in updatemirrorTried
+		{
+			if(p=k) {
+				tested:=True
+				break
+			}
+		}
+		if not tested {
+			updateMirror:=k
+			get_latest_version()
+			Return
+		}
+	}
+	TrayTip "Status=" req.status, "update failed", 0x3
+}
 ; with MSXML2.ServerXMLHTTP method, there would be multiple callback called
 
 updateReady(){
@@ -62,6 +95,7 @@ updateReady(){
 	updateReqDone := 1
 	; log("update req.status=" req.status, 1)
     if(req.status == 200 and StrLen(req.responseText)<=64){ ; OK.
+		SetTimer(updateTimeout, 0)
         ; MsgBox % "Latest version: " req.responseText
 		RegExMatch(version, "(\d+)\.(\d+)\.(\d+)", &verNow)
 		RegExMatch(req.responseText, "^(\d+)\.(\d+)\.(\d+)$", &verNew)
@@ -86,25 +120,7 @@ updateReady(){
 			todayUpdated()
 		}
 	} else {
-		updatemirrorTried.Push(updateMirror)
-		For k, v in mirrorList
-		{
-			local tested
-			tested:=False
-			for , p in updatemirrorTried
-			{
-				if(p=k) {
-					tested:=True
-					break
-				}
-			}
-			if not tested {
-				updateMirror:=k
-				get_latest_version()
-				Return
-			}
-		}
-		TrayTip "Status=" req.status, "update failed", 0x3
+		tryNextUpdate()
 	}
 }
 
