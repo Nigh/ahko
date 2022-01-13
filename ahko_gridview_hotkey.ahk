@@ -31,11 +31,9 @@ subgrid_choose(key)
 	{
 		if not v.isHide
 		{
-			
-			if(v.btnCall[revkeyList[key]]!="") {
+			if(revkeyList[key]<=v.btnCall.Length and v.btnCall[revkeyList[key]]!="") {
 				v.btnCall[revkeyList[key]]()
 			}
-			; MsgBox(k "," key)
 			Return
 		}
 	}
