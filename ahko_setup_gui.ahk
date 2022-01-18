@@ -53,9 +53,12 @@ ahko_setup.Add("Text", "xs y+5", "Hotkey is ")
 ahkoSetup_hotkeyText:=ahko_setup.Add("Text", "x+0 hp cc07070 w260", "")
 
 ahko_setup.SetFont(h2FontStyle)
-ahko_setup.Add("Text", "xs y+30", "Startup")
+ahko_setup.Add("Text", "xs y+30", "Other")
 ahko_setup.SetFont(textFontStyle)
-ahkoSetup_autoStart:=ahko_setup.Add("CheckBox", "y+10 hp", "startup with Windows")
+ahkoSetup_enable_fullscreen:=ahko_setup.Add("CheckBox", "y+10 hp", "Enable in fullscreen")
+ahkoSetup_enable_fullscreen.OnEvent("Click", enable_fullscreen_update)
+
+ahkoSetup_autoStart:=ahko_setup.Add("CheckBox", "y+5 hp", "Startup with Windows")
 ahkoSetup_autoStart.OnEvent("Click", autoStartup_update)
 
 ahko_setup.SetFont(textFontStyle)
@@ -94,6 +97,7 @@ ahko_setup_show(*) {
 	ahkoSetup_hotkeyWin.Value:=RegExMatch(hotkeys, "#")
 	hotkeyText_update()
 	local autostart:=RegRead("HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run","ahko","")
+	ahkoSetup_enable_fullscreen.Value:=fullscreen_enable
 	if(autostart!="") {
 		ahkoSetup_autoStart.Value:=1
 	} else {
@@ -118,6 +122,7 @@ ahko_setup_save(*) {
 		hotkeyStr.=ahkoSetup_hotkey.Value
 		IniWrite("path=" ahkoSetup_path.Value, "setting.ini", "dir")
 		IniWrite("key=" hotkeyStr, "setting.ini", "hotkey")
+		IniWrite("fullscreen=" fullscreen_enable, "setting.ini", "hotkey")
 		IniWrite("type=" ahkoSetup_uiType.Value, "setting.ini", "ui")
 		MsgBox("In order for the changes to take effect`nahko is is about to be restarted","OK","Owner" ahko_setup.Hwnd)
 		Reload
@@ -164,6 +169,10 @@ autoStartup_update(*)
 	global
 	ahko_setup_autostart(ahkoSetup_autoStart.Value)
 }
-
+enable_fullscreen_update(*)
+{
+	global
+	fullscreen_enable:=ahkoSetup_enable_fullscreen.Value
+}
 ; ahko_setup_show()
 

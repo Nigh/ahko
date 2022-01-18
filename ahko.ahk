@@ -4,8 +4,10 @@ Persistent
 
 path:=IniRead("setting.ini", "dir", "path", "")
 hotkeys:=IniRead("setting.ini", "hotkey", "key", "!q")
+fullscreen_enable:=IniRead("setting.ini", "hotkey", "fullscreen", "0")
 uiType:=IniRead("setting.ini", "ui", "type", "2")
 
+#include isFullScreen.ahk
 #include ahko_setup_gui.ahk
 
 customTrayMenu:={valid:true}
@@ -84,7 +86,20 @@ fileGethIcon(file)
 	Return
 }
 
+isNotFullScreen(*)
+{
+	Return not isFullScreen()
+}
+
 #Include ahko_ui.ahk
 ahko_ui_init()
-Hotkey hotkeys, ahko_show, "On"
+if(fullscreen_enable)
+{
+	Hotkey hotkeys, ahko_show, "On"
+} else {
+	Hotif isNotFullScreen
+	Hotkey hotkeys, ahko_show, "On"
+	Hotif
+}
+
 
