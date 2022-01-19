@@ -10,7 +10,7 @@ ahko is a quick launcher for windows.
 
 ![](./assets/screenshot_gridview.png)
 
-### Listview :
+### Listview(**Deprecated**) :
 
 ![](./assets/screenshot_listview.png)
 
