@@ -3,6 +3,8 @@
 h2FontStyle:="s22 w600 c505050 q5"
 textFontStyle:="s12 w400 cblack q5"
 clientWidth:=320
+header_gap:=" y+20 "
+item_gap:=" y+5 "
 
 ahko_setup := Gui("+ToolWindow +AlwaysOnTop -DPIScale +OwnDialogs","ahko setup")
 ahko_setup.SetFont(, "Microsoft JhengHei")
@@ -18,7 +20,7 @@ ahko_setup.Add("Text", "x0 y+-50 +BackgroundTrans", "____________________")
 ahko_setup.SetFont(h2FontStyle)
 ahko_setup.Add("Text","x30 y+20 section", "UI type")
 ahko_setup.SetFont(textFontStyle)
-ahkoSetup_uiType:=ahko_setup.Add("DropDownList", "y+10 w" clientWidth, ["Listview","Gridview","Gridview(Gdip)"])
+ahkoSetup_uiType:=ahko_setup.Add("DropDownList", item_gap "w" clientWidth, ["Listview(Deprecated)","Gridview","Gridview(Gdip)"])
 ahkoSetup_uiType.OnEvent("Change", uiType_update)
 uiType_update(*) {
 	if(ahkoSetup_uiType.Value>2) {
@@ -27,10 +29,10 @@ uiType_update(*) {
 	}
 }
 ahko_setup.SetFont(h2FontStyle)
-ahko_setup.Add("Text", "xs y+30", "Watch folder")
+ahko_setup.Add("Text", "xs " header_gap, "Watch folder")
 ahko_setup.SetFont(textFontStyle)
 buttonWidth:=95
-AhkoSetup_path:=ahko_setup.Add("Edit", "y+10 r1 w" clientWidth-buttonWidth-5, "")
+AhkoSetup_path:=ahko_setup.Add("Edit", item_gap "r1 w" clientWidth-buttonWidth-5, "")
 pathSelectBtn := ahko_setup.Add("Button", "x+5 hp w" buttonWidth, "Select")
 pathSelectBtn.OnEvent("Click", setup_path)
 setup_path(*){
@@ -41,24 +43,81 @@ setup_path(*){
 }
 
 ahko_setup.SetFont(h2FontStyle)
-ahko_setup.Add("Text", "xs y+30", "Hotkey")
+ahko_setup.Add("Text", "xs " header_gap, "Hotkey")
 ahko_setup.SetFont(textFontStyle)
-ahkoSetup_hotkey:=ahko_setup.Add("Hotkey", "y+10 w" clientWidth-buttonWidth-5)
+ahkoSetup_hotkey:=ahko_setup.Add("Hotkey", item_gap "w" clientWidth-buttonWidth-5)
 ahkoSetup_hotkey.OnEvent("Change", hotkeyText_update)
 ahkoSetup_hotkeyWin:=ahko_setup.Add("CheckBox", "x+10 hp w" buttonWidth, "Win")
 ahkoSetup_hotkeyWin.OnEvent("Click", hotkeyText_update)
 
 ahko_setup.SetFont("s10")
-ahko_setup.Add("Text", "xs y+5", "Hotkey is ")
+ahko_setup.Add("Text", "xs" item_gap, "Hotkey is ")
 ahkoSetup_hotkeyText:=ahko_setup.Add("Text", "x+0 hp cc07070 w260", "")
 
 ahko_setup.SetFont(h2FontStyle)
-ahko_setup.Add("Text", "xs y+30", "Other")
+ahko_setup.Add("Text", "xs " header_gap, "ahko where")
 ahko_setup.SetFont(textFontStyle)
-ahkoSetup_enable_fullscreen:=ahko_setup.Add("CheckBox", "y+10 hp", "Enable in fullscreen")
+showAtDDL:=["Primary monitor","Follow mouse","Follow active window"]
+For k, v in isFullScreen.monitors
+{
+	showAtDDL.Push("Monitor #" k)
+}
+ahkoSetup_showAt:=ahko_setup.Add("DropDownList", item_gap "w" clientWidth, showAtDDL)
+ahkoSetup_showAt.OnEvent("Change", showAt_update)
+showat_from_ddl(dd) {
+	if(dd>=4) {
+		return dd-3
+	} else if(dd>=1) {
+		if(dd == 1) {
+			return 0
+		}
+		if(dd == 2) {
+			return 10
+		}
+		if(dd == 3) {
+			return 11
+		}
+	}
+	return 1
+}
+ddl_from_showat(sw) {
+	if(sw==0) {
+		return 1
+	}
+	if(sw==10) {
+		return 2
+	}
+	if(sw==11){
+		return 3
+	}
+	if(sw>=1 && sw<=9){
+		return sw+3
+	}
+	return 1
+}
+showAt_update(*) {
+	global showat
+	; MsgBox(ahkoSetup_showAt.Value)
+	if(ahkoSetup_showAt.Value>=4) {
+		showat:=showat_from_ddl(ahkoSetup_showAt.Value)
+		ahko_setup.Show(showat_monitor(showat))
+	} else {
+		showat:=showat_from_ddl(ahkoSetup_showAt.Value)
+	}
+	showat_monitor(n){
+		global isFullScreen, ahko_setup
+		ahko_setup.GetClientPos(,,&w,&h)
+		Return "x" Round(isFullScreen.monitors[n].l+isFullScreen.monitors[n].r-w)//2 " y" Round(isFullScreen.monitors[n].t+isFullScreen.monitors[n].b-h)//2
+	}
+}
+
+ahko_setup.SetFont(h2FontStyle)
+ahko_setup.Add("Text", "xs " header_gap, "Other")
+ahko_setup.SetFont(textFontStyle)
+ahkoSetup_enable_fullscreen:=ahko_setup.Add("CheckBox", item_gap "hp", "Enable in fullscreen")
 ahkoSetup_enable_fullscreen.OnEvent("Click", enable_fullscreen_update)
 
-ahkoSetup_autoStart:=ahko_setup.Add("CheckBox", "y+5 hp", "Startup with Windows")
+ahkoSetup_autoStart:=ahko_setup.Add("CheckBox", "y+0 hp", "Startup with Windows")
 ahkoSetup_autoStart.OnEvent("Click", autoStartup_update)
 
 ahko_setup.SetFont(textFontStyle)
@@ -91,6 +150,7 @@ hotkeyText_update(*) {
 ahko_setup_show(*) {
 	global
 	ahkoSetup_uiType.Value:=uiType
+	ahkoSetup_showAt.Value:=ddl_from_showat(showat)
 	ahkoSetup_path.Value:=path
 
 	ahkoSetup_hotkey.Value:=RegExReplace(hotkeys, "#")
@@ -124,6 +184,7 @@ ahko_setup_save(*) {
 		IniWrite("key=" hotkeyStr, "setting.ini", "hotkey")
 		IniWrite("fullscreen=" fullscreen_enable, "setting.ini", "hotkey")
 		IniWrite("type=" ahkoSetup_uiType.Value, "setting.ini", "ui")
+		IniWrite("showat=" showat, "setting.ini", "settings")
 		MsgBox("In order for the changes to take effect`nahko is is about to be restarted","OK","Owner" ahko_setup.Hwnd)
 		Reload
 	}

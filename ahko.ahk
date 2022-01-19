@@ -5,7 +5,22 @@ Persistent
 path:=IniRead("setting.ini", "dir", "path", "")
 hotkeys:=IniRead("setting.ini", "hotkey", "key", "!q")
 fullscreen_enable:=IniRead("setting.ini", "hotkey", "fullscreen", "0")
+uiType_list:="1|2"
 uiType:=IniRead("setting.ini", "ui", "type", "2")
+if not RegExMatch(uiType, uiType_list)
+{
+	uiType := "2"
+}
+; 0 = primary monitor
+; 1~9 = specific monitor
+; 10 = monitor the mouse at
+; 11 = monitor the activate window at
+showat_list:="0|1|2|3|4|5|6|7|8|9|10|11"
+showat:=IniRead("setting.ini", "settings", "showat", "10")
+if not RegExMatch(showat, showat_list)
+{
+	showat := "10"
+}
 
 #include isFullScreen.ahk
 #include ahko_setup_gui.ahk
@@ -93,6 +108,7 @@ isNotFullScreen(*)
 
 #Include ahko_ui.ahk
 ahko_ui_init()
+; TODO: if hotkey invalid, then reset the hotkey to default
 if(fullscreen_enable)
 {
 	Hotkey hotkeys, ahko_show, "On"

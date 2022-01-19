@@ -18,6 +18,7 @@ ahko_gridview_init(ahko)
 	local outerIndex:=1
 	local gmargin:=10
 	local titleHeight:=40
+	ahko_grid.size:={w:5.5*(buttonSize+gmargin), h:4*(buttonSize+gmargin)+titleHeight}
 
 	gridview_presetup(ahko_grid)
 	ahko_grid.add("Button", "w" buttonSize " h" titleHeight " x0 y1 left", " ahko")
@@ -83,7 +84,7 @@ gui_user_bind(g)
 	}
 	uShow(*) {
 		g.isHide:=False
-		g.Show()
+		g.Show(grid_showat())
 	}
 	g.btnCall:=[]
 	g.isHide:=True
@@ -131,6 +132,51 @@ gridview_postsetup(grid)
 	grid.BackColor := "FF00FF"
 	WinSetTransColor "FF00FF 0xE0", grid.Hwnd
 	grid.Opt("-Caption")
+	grid.Show("Hide")
+}
+
+grid_showat()
+{
+	global showat,ahko_grid,isFullScreen
+	; MsgBox(showat)
+	CoordMode("Mouse","Screen")
+	if(showat=="0"){
+		Return ""
+	}
+	if(showat>=1 and showat<=9){
+		if(isFullScreen.monitors.Length >= showat){
+			Return showat_monitor(showat)
+		}else{
+			Return ""
+		}
+	}
+	if(showat=="10"){
+		MouseGetPos(&mx,&my)
+		For k, v in isFullScreen.monitors
+		{
+			; MsgBox("m" k ":mx" mx ",my" my "`nl" v.l "r" v.r "t" v.t "b" v.b)
+			if(mx>=v.l && mx<=v.r && my>=v.t && my<=v.b){
+				Return showat_monitor(k)
+			}
+		}
+	}
+	if(showat=="11"){
+		WinGetPos(&wx, &wy, &ww, &wh, "A")
+		wx+=ww//3
+		wy+=wh//3
+		For k, v in isFullScreen.monitors
+		{
+			if(wx>=v.l and wx<=v.r and wy>=v.t and wy<=v.b){
+				Return showat_monitor(k)
+			}
+		}
+	}
+	Return ""
+	showat_monitor(n){
+		; MsgBox("showat " n)
+		; ahko_grid.GetClientPos(,,&w,&h)
+		Return "x" Round(isFullScreen.monitors[n].l+isFullScreen.monitors[n].r-ahko_grid.size.w)//2 " y" Round(isFullScreen.monitors[n].t+isFullScreen.monitors[n].b-ahko_grid.size.h)//2
+	}
 }
 
 ;{ GuiButtonIcon
