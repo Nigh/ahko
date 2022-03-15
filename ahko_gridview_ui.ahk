@@ -1,181 +1,301 @@
 
 
-#Include ahko_gridview_hotkey.ahk
+#Include Gdip_All.ahk
 
-gridOpt:="+AlwaysOnTop -DPIScale +Owner"
-ahko_grid := Gui(gridOpt)
-gui_user_bind(ahko_grid)
-ahko_gridview_init(ahko)
+class ahko_gridview_class
 {
-	global ahko_grid, gridOpt, ahko_grid_sub, subgridGroup
-	local position:=Array(
-		{x:0,y:0},{x:1,y:0},{x:2,y:0},
-		{x:0.5,y:1},{x:1.5,y:1},{x:2.5,y:1},
-		{x:1,y:2},{x:2,y:2},{x:3,y:2},
-		{x:3,y:0},{x:3.5,y:1},{x:4,y:2},
-		{x:1.5,y:3},{x:2.5,y:3},{x:3.5,y:3},{x:4.5,y:3})
-	local buttonSize:=200
-	local outerIndex:=1
-	local gmargin:=10
-	local titleHeight:=40
-	ahko_grid.size:={w:5.5*(buttonSize+gmargin), h:4*(buttonSize+gmargin)+titleHeight}
+	showat := "10"
+	grid_opt := "+AlwaysOnTop -DPIScale +Owner"
+	grid_gui := Gui(this.grid_opt)
+	grid_sub_gui := []
+	use_gdip := 0
 
-	gridview_presetup(ahko_grid)
-	ahko_grid.add("Button", "w" buttonSize " h" titleHeight " x0 y1 left", " ahko")
+	item_pos:=Array(
+		{x:0,y:0,key:'1'},{x:1,y:0,key:'2'},{x:2,y:0,key:'3'},
+		{x:0.5,y:1,key:'q'},{x:1.5,y:1,key:'w'},{x:2.5,y:1,key:'e'},
+		{x:1,y:2,key:'a'},{x:2,y:2,key:'s'},{x:3,y:2,key:'d'},
+		{x:3,y:0,key:'4'},{x:3.5,y:1,key:'r'},{x:4,y:2,key:'f'},
+		{x:1.5,y:3,key:'z'},{x:2.5,y:3,key:'x'},{x:3.5,y:3,key:'c'},
+		{x:4.5,y:3,key:'v'})
+	buttonSize:=200
+	outerIndex:=1
+	gmargin:=10
+	titleHeight:=40
 
-	; ahko_grid.MarginX:=10, ahko_grid.MarginY:=10
-	ahko_grid_sub:=[]
-	For , layer0 in ahko
-	{
-		if(InStr(layer0.attrib, "D")) {
-			ahko_grid_sub.Push(Gui(gridOpt))
-			gui_user_bind(ahko_grid_sub[-1])
-			GroupAdd("subgridGroup", "ahk_id " ahko_grid_sub[-1].Hwnd)
-			gridview_presetup(ahko_grid_sub[-1])
-			btn:=ahko_grid_sub[-1].add("Button", "w" buttonSize " h" titleHeight " x0 y1 left", " " layer0.name)
-			btn.OnEvent("Click", ahko_show)
-			local subIndex:=1
-			For , layer1 in layer0.sub
-			{
-				btn:=ahko_grid_sub[-1].add("Button", "w" buttonSize " h" buttonSize " x" position[subIndex].x*(buttonSize+gmargin) " y" position[subIndex].y*(buttonSize+gmargin)+titleHeight+gmargin, layer1.name "`n<&" StrUpper(hotkeyList[subIndex]) ">")
-				ahko_grid_sub[-1].btnCall.Push(gridview_run_maker(layer1.path, ahko_grid_sub[-1]))
-				btn.OnEvent("Click", ahko_grid_sub[-1].btnCall[-1])
-				iconPath:=layer1.icon Or fileGethIcon(layer1.path)
-				if(iconPath){
-					Try{
-						GuiButtonIcon(btn.hwnd, iconPath,, "a2 s100 t16")
+	__New(gdip:=0) {
+		this.use_gdip := gdip
+		this.set_gui_default_prop(this.grid_gui)
+		this.grid_gui.size:={
+			w:5.5*(this.buttonSize+this.gmargin),
+			h:4*(this.buttonSize+this.gmargin)+this.titleHeight
+		}
+		; add title button
+		this.gui_add_btn(this.grid_gui, 
+			0, 
+			1, 
+			this.buttonSize, 
+			this.titleHeight, 
+			"left", 
+			" ahko")
+
+		For k0, layer0 in ahko
+		{
+			if(InStr(layer0.attrib, "D")) {
+				sub_gui:=this.sub_gui_push()
+				; add title button
+				btn:=this.gui_add_btn(sub_gui, 
+					0, 
+					1, 
+					this.buttonSize, 
+					this.titleHeight, 
+					"left", 
+					layer0.name,
+					this.uShow)
+				btn.father_gui := this.grid_gui
+				; create sub grid
+				For k1, layer1 in layer0.sub
+				{
+					; add item button
+					this.gui_add_grid_btn(sub_gui, k1, layer1)
+				}
+				this.set_gui_transparent(sub_gui)
+			}
+			; add grid button
+			this.gui_add_grid_btn(this.grid_gui, k0, layer0, sub_gui)
+		}
+		this.set_gui_transparent(this.grid_gui)
+		this.hotkey_setup()
+	}
+
+	hotkey_setup() {
+		this.revkeyList:=map()
+		For k, v in this.item_pos
+		{
+			this.revkeyList[v.key]:=k
+		}
+		
+		subgrid_func_maker(n) {
+			select(*) {
+				For , v in this.grid_sub_gui
+				{
+					if not v.isHide
+					{
+						v.callback[n]()
 					}
 				}
-				subIndex+=1
 			}
-			gridview_postsetup(ahko_grid_sub[-1])
+			return select
+		}
 
-			local folder_name:=layer0.name "-[" subIndex-1 "]`n<&" StrUpper(hotkeyList[outerIndex]) ">"
-			btn:=ahko_grid.add("Button", "w" buttonSize " h" buttonSize " x" position[outerIndex].x*(buttonSize+gmargin) " y" position[outerIndex].y*(buttonSize+gmargin)+titleHeight+gmargin, folder_name)
-			if(subIndex>1) {
-				ahko_grid.btnCall.Push(gridview_show_maker(ahko_grid_sub[-1]))
-				btn.OnEvent("Click", ahko_grid.btnCall[-1])
-			} else {
-				ahko_grid.btnCall.Push("")
-				btn.Opt("Disabled")
+		HotIfWinActive("ahk_id " this.grid_gui.Hwnd)
+		hotkey("Escape", this.grid_gui.uHide)
+		For k, v in this.grid_gui.callback
+		{
+			if(v!="") {
+				hotkey(this.item_pos[k].key, v)
 			}
-			iconPath:=layer0.icon Or fileGethIcon(layer0.path)
-			if(iconPath){
-				Try{
-					GuiButtonIcon(btn.hwnd, iconPath,, "a2 s100 t16")
-				}
-			}
-			outerIndex+=1
-		} else {
-			ahko_grid_sub.Push("")
-			btn:=ahko_grid.add("Button", "w" buttonSize " h" buttonSize " x" position[outerIndex].x*(buttonSize+gmargin) " y" position[outerIndex].y*(buttonSize+gmargin), layer0.name)
-			btn.OnEvent("Click", gridview_run_maker(layer0.path))
-			outerIndex+=1
 		}
+		HotIf
+
+		subgrid_return(*){
+			this.Show()
+		}
+		HotIfWinActive("ahk_group subgridGroup")
+		hotkey("Escape", subgrid_return)
+		hotkey("``", subgrid_return)
+		Loop 16
+		{
+			hotkey(this.item_pos[A_Index].key, subgrid_func_maker(A_Index))
+		}
+		HotIf
 	}
-	gridview_postsetup(ahko_grid)
-	gridview_hotkey_init()
-}
-gui_user_bind(g)
-{
-	uHide(*) {
+
+	sub_gui_push()
+	{
+		this.grid_sub_gui.Push(Gui(this.grid_opt))
+		this.set_gui_default_prop(this.grid_sub_gui[-1])
+		GroupAdd("subgridGroup", "ahk_id " this.grid_sub_gui[-1].Hwnd)
+		Return this.grid_sub_gui[-1]
+	}
+	
+	set_gui_default_prop(g) {
+		uHide(*) {
+			g.isHide:=True
+			g.Hide()
+		}
+		uShow(*) {
+			g.isHide:=False
+			g.Show(this.gui_showat())
+		}
+		g.btnCall:=[]
 		g.isHide:=True
-		g.Hide()
+		g.uShow := uShow
+		g.uHide := uHide
+		g.SetFont(, "Microsoft JhengHei")
+		g.SetFont(, "Verdana")
+		g.SetFont(, "LilyUPC")
+		g.SetFont("s14 w700 cc07070")
 	}
-	uShow(*) {
-		g.isHide:=False
-		g.Show(grid_showat())
+
+	set_gui_transparent(g)
+	{
+		g.BackColor := "FF00FF"
+		WinSetTransColor "FF00FF 0xE0", g.Hwnd
+		g.Opt("-Caption")
+		g.Show("Hide")
 	}
-	g.btnCall:=[]
-	g.isHide:=True
-	g.uShow := uShow
-	g.uHide := uHide
-}
-gridview_run_maker(file, grid:="")
-{
-	runner(*) {
-		grid!="" ? grid.uHide() : ()=>{}
-		SplitPath(file,,&atDir)
-		Try{
-			Run(file, atDir)
-		}
-	}
-	return runner
-}
-gridview_show_maker(grid)
-{
-	gridAutoHide() {
-		if(!WinActive("ahk_id " grid.Hwnd)) {
-			Try {
+
+	runner_maker(file, grid:="")
+	{
+		runner(*) {
+			if(grid is Class and grid.HasOwnProp("uHide")) {
 				grid.uHide()
 			}
-			settimer(gridAutoHide, 0)
+			SplitPath(file,,&atDir)
+			Try{
+				Run(file, atDir)
+			}
+		}
+		return runner
+	}
+
+	gui_add_btn(obj, x, y, w, h, opt:="", title:="", callback:="")
+	{
+		btn:=obj.add("Button", "x" x " y" y " w" w " h" h " " opt, " " title)
+		if(callback) {
+			btn.OnEvent("Click", callback)
+		}
+		Return btn
+	}
+
+	gui_add_grid_btn(guiobj, grid_index, ahko_obj, sub_grid:="")
+	{
+		callback_maker() {
+			callback(*){
+				guiobj.uHide()
+				if(sub_grid!="" && InStr(ahko_obj.attrib, "D")){
+					sub_grid.uShow()
+				} else if(ahko_obj!="") {
+					SplitPath(ahko_obj.path,,&atDir)
+					Try{
+						Run(ahko_obj.path, atDir)
+					}
+				} else {
+					this.Show()
+				}
+			}
+			return callback
+		}
+		callback := callback_maker()
+		if(!guiobj.HasOwnProp("callback")) {
+			guiobj.callback := map()
+		}
+		guiobj.callback[grid_index] := callback
+		btn:=this.gui_add_btn(guiobj, 
+							this.item_pos[grid_index].x*(this.buttonSize+this.gmargin), 
+							this.item_pos[grid_index].y*(this.buttonSize+this.gmargin)+this.titleHeight+this.gmargin, 
+							this.buttonSize, this.buttonSize, , 
+							ahko_obj.name "`n<&" StrUpper(this.item_pos[grid_index].key) ">", 
+							callback)
+		iconPath:=ahko_obj.icon Or fileGethIcon(ahko_obj.path)
+		if(iconPath){
+			Try{
+				GuiButtonIcon(btn.hwnd, iconPath,, "a2 s100 t16")
+			}
 		}
 	}
-	shower(*) {
-		global ahko_grid
-		ahko_grid.uHide()
-		grid.uShow()
-		settimer(gridAutoHide, 150)
-	}
-	return shower
-}
-gridview_presetup(grid)
-{
-	grid.SetFont(, "Microsoft JhengHei")
-	grid.SetFont(, "Verdana")
-	grid.SetFont(, "LilyUPC")
-	grid.SetFont("s14 w700 cc07070")
-}
-gridview_postsetup(grid)
-{
-	grid.BackColor := "FF00FF"
-	WinSetTransColor "FF00FF 0xE0", grid.Hwnd
-	grid.Opt("-Caption")
-	grid.Show("Hide")
-}
 
-grid_showat()
-{
-	global showat,ahko_grid,isFullScreen
-	; MsgBox(showat)
-	CoordMode("Mouse","Screen")
-	if(showat=="0"){
-		Return ""
-	}
-	if(showat>=1 and showat<=9){
-		if(isFullScreen.monitors.Length >= showat){
-			Return showat_monitor(showat)
-		}else{
+	gui_showat()
+	{
+		global isFullScreen
+		; MsgBox(this.showat)
+		CoordMode("Mouse","Screen")
+		if(this.showat=="0"){
 			Return ""
 		}
-	}
-	if(showat=="10"){
-		MouseGetPos(&mx,&my)
-		For k, v in isFullScreen.monitors
-		{
-			; MsgBox("m" k ":mx" mx ",my" my "`nl" v.l "r" v.r "t" v.t "b" v.b)
-			if(mx>=v.l && mx<=v.r && my>=v.t && my<=v.b){
-				Return showat_monitor(k)
+		if(this.showat>=1 and this.showat<=9){
+			if(isFullScreen.monitors.Length >= this.showat){
+				Return showat_monitor(this.showat)
+			}else{
+				Return ""
 			}
 		}
-	}
-	if(showat=="11"){
-		WinGetPos(&wx, &wy, &ww, &wh, "A")
-		wx+=ww//3
-		wy+=wh//3
-		For k, v in isFullScreen.monitors
-		{
-			if(wx>=v.l and wx<=v.r and wy>=v.t and wy<=v.b){
-				Return showat_monitor(k)
+		if(this.showat=="10"){
+			MouseGetPos(&mx,&my)
+			For k, v in isFullScreen.monitors
+			{
+				; MsgBox("m" k ":mx" mx ",my" my "`nl" v.l "r" v.r "t" v.t "b" v.b)
+				if(mx>=v.l && mx<=v.r && my>=v.t && my<=v.b){
+					Return showat_monitor(k)
+				}
 			}
 		}
+		if(this.showat=="11"){
+			WinGetPos(&wx, &wy, &ww, &wh, "A")
+			wx+=ww//3
+			wy+=wh//3
+			For k, v in isFullScreen.monitors
+			{
+				if(wx>=v.l and wx<=v.r and wy>=v.t and wy<=v.b){
+					Return showat_monitor(k)
+				}
+			}
+		}
+		Return ""
+		showat_monitor(n){
+			Return "x" Round(isFullScreen.monitors[n].l+isFullScreen.monitors[n].r-this.grid_gui.size.w)//2 " y" Round(isFullScreen.monitors[n].t+isFullScreen.monitors[n].b-this.grid_gui.size.h)//2
+		}
 	}
-	Return ""
-	showat_monitor(n){
-		; MsgBox("showat " n)
-		; ahko_grid.GetClientPos(,,&w,&h)
-		Return "x" Round(isFullScreen.monitors[n].l+isFullScreen.monitors[n].r-ahko_grid.size.w)//2 " y" Round(isFullScreen.monitors[n].t+isFullScreen.monitors[n].b-ahko_grid.size.h)//2
+
+	; for callback this=button
+	uShow(*) {
+		if(this.HasOwnProp("father_gui")) {
+			this.father_gui.uShow()
+			SetTimer(this.gridWaitNotActive, 100)
+		}
+		this.Gui.uHide()
+	}
+
+	Show() {
+		For , v in this.grid_sub_gui
+		{
+			if(!v.isHide){
+				v.uHide()
+			}
+		}
+		this.grid_gui.uShow()
+		SetTimer(this.gridWaitNotActive, 100)
+	}
+
+	gridWaitNotActive {
+		get {
+			cb() {
+				active_count:=0
+				if(!this.grid_gui.isHide) {
+					active_count += 1
+					if(!WinActive("ahk_id " this.grid_gui.hwnd)){
+						this.grid_gui.uHide()
+						SetTimer(this.gridWaitNotActive, 0)
+						Return
+					}
+				}
+				For , v in this.grid_sub_gui
+				{
+					if(!v.isHide){
+						active_count += 1
+						if(!WinActive("ahk_id " v.hwnd)){
+							v.uHide()
+							SetTimer(this.gridWaitNotActive, 0)
+							Return
+						}
+					}
+				}
+				if(!active_count) {
+					SetTimer(this.gridWaitNotActive, 0)
+				}
+			}
+			Return cb
+		}
 	}
 }
 

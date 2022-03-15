@@ -35,11 +35,6 @@ Hotkey("F5", _exit)
 Hotkey("F6", _reload)
 ;@Ahk2Exe-IgnoreEnd
 
-; if you need admin privilege, enable it.
-if(0)
-{
-	UAC()
-}
 #include update.ahk
 OnExit(trueExit)
 

@@ -6,43 +6,29 @@ ahko_show(*)
 		ahko_listview.Show()
 	}
 	if(uiType=="2") {
-		For , g in ahko_grid_sub
-		{
-			Try{
-				if not g.isHide
-				{
-					g.uhide()
-				}
-			}
-		}
-		ahko_grid.uShow()
-		if(!winwait("ahk_id " ahko_grid.hwnd,,3)){
+		ahko_gridview.Show()
+		if(!winwait("ahk_id " ahko_gridview.grid_gui.hwnd,,3)){
 			Return
 		}
 		Try{
-			WinActivate("ahk_id " ahko_grid.hwnd)
+			WinActivate("ahk_id " ahko_gridview.grid_gui.hwnd)
 		}
-		SetTimer(gridWaitNotActive, 150)
-	}
-}
-gridWaitNotActive()
-{
-	global ahko_grid
-	if(!WinActive("ahk_id " ahko_grid.hwnd)) {
-		Try {
-			ahko_grid.uHide()
-		}
-		SetTimer(gridWaitNotActive, 0)
 	}
 }
 
 ahko_ui_init(*)
 {
+	global
 	if(uiType=="1") {
 		ahko_listview_init(ahko)
 	}
 	if(uiType=="2") {
-		ahko_gridview_init(ahko)
+		ahko_gridview := ahko_gridview_class()
+		ahko_gridview.showat := showat
+	}
+	if(uiType=="3") {
+		ahko_gridview := ahko_gridview_class(1)
+		ahko_gridview.showat := showat
 	}
 }
 
