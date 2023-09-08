@@ -18,7 +18,7 @@ ahko_setup.Add("Text", "x0 y+-66 +BackgroundTrans", "________")
 ahko_setup.SetFont(h2FontStyle)
 ahko_setup.Add("Text","x30 y+20 section", "UI type")
 ahko_setup.SetFont(textFontStyle)
-ahkoSetup_uiType:=ahko_setup.Add("DropDownList", item_gap "w" clientWidth, ["Gridview","Gridview(Gdip)","WebView"])
+ahkoSetup_uiType:=ahko_setup.Add("DropDownList", item_gap "w" clientWidth, ["Native Gridview","GDIp Gridview","WebView"])
 ahkoSetup_uiType.OnEvent("Change", uiType_update)
 uiType_update(*) {
 	if(ahkoSetup_uiType.Value>2) {
