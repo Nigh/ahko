@@ -1,31 +1,29 @@
 
 
-h2FontStyle:="s22 w600 c505050 q5"
+h2FontStyle:="s18 w600 c505050 q5"
 textFontStyle:="s12 w400 cblack q5"
-clientWidth:=320
-header_gap:=" y+20 "
-item_gap:=" y+5 "
+clientWidth:=360
+header_gap:=" y+10 "
+item_gap:=" y+3 "
 
 ahko_setup := Gui("+ToolWindow +AlwaysOnTop -DPIScale +OwnDialogs","ahko setup")
-ahko_setup.SetFont(, "Microsoft JhengHei")
-ahko_setup.SetFont(, "Verdana")
-; ahko_setup.SetFont(, "LilyUPC")
-; ahko_setup.SetFont(, "Meiryo")
+ahko_setup.SetFont(, "Consolas")
 ahko_setup.SetFont(, "MV Boli")
+ahko_setup.SetFont(, "Comic Sans MS")
 
 ahko_setup.SetFont("s32 w700 cc07070")
-ahko_setup.Add("Text", "x10 y10", "ahko setup")
-ahko_setup.Add("Text", "x0 y+-50 +BackgroundTrans", "____________________")
+ahko_setup.Add("Text", "x25 y5", "Setup")
+ahko_setup.Add("Text", "x0 y+-66 +BackgroundTrans", "________")
 
 ahko_setup.SetFont(h2FontStyle)
 ahko_setup.Add("Text","x30 y+20 section", "UI type")
 ahko_setup.SetFont(textFontStyle)
-ahkoSetup_uiType:=ahko_setup.Add("DropDownList", item_gap "w" clientWidth, ["Listview(Deprecated)","Gridview","Gridview(Gdip)"])
+ahkoSetup_uiType:=ahko_setup.Add("DropDownList", item_gap "w" clientWidth, ["Gridview","Gridview(Gdip)","WebView"])
 ahkoSetup_uiType.OnEvent("Change", uiType_update)
 uiType_update(*) {
 	if(ahkoSetup_uiType.Value>2) {
 		MsgBox("This ui type is still under development","OK","Owner" ahko_setup.Hwnd)
-		ahkoSetup_uiType.Value := 2
+		ahkoSetup_uiType.Value := 1
 	}
 }
 ahko_setup.SetFont(h2FontStyle)
@@ -114,14 +112,14 @@ showAt_update(*) {
 ahko_setup.SetFont(h2FontStyle)
 ahko_setup.Add("Text", "xs " header_gap, "Other")
 ahko_setup.SetFont(textFontStyle)
-ahkoSetup_enable_fullscreen:=ahko_setup.Add("CheckBox", item_gap "hp", "Enable in fullscreen")
+ahkoSetup_enable_fullscreen:=ahko_setup.Add("CheckBox", "y+-5 hp", "Enable in fullscreen")
 ahkoSetup_enable_fullscreen.OnEvent("Click", enable_fullscreen_update)
 
-ahkoSetup_autoStart:=ahko_setup.Add("CheckBox", "y+0 hp", "Startup with Windows")
+ahkoSetup_autoStart:=ahko_setup.Add("CheckBox", "y+-10 hp", "Startup with Windows")
 ahkoSetup_autoStart.OnEvent("Click", autoStartup_update)
 
 ahko_setup.SetFont(textFontStyle)
-saveBtn := ahko_setup.Add("Button", "xs y+50 h50 w" (clientWidth-40)//2, "Save")
+saveBtn := ahko_setup.Add("Button", "xs y+30 h50 w" (clientWidth-40)//2, "Save")
 saveBtn.OnEvent("Click", ahko_setup_save)
 cancelBtn := ahko_setup.Add("Button", "x+40 hp w" (clientWidth-40)//2, "Cancel")
 cancelBtn.OnEvent("Click", ahko_setup_cancel)

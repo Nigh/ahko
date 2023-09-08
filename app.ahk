@@ -1,4 +1,5 @@
 ﻿
+#Requires AutoHotkey v2.0
 SetWorkingDir(A_ScriptDir)
 #Warn Unreachable, Off
 #SingleInstance force

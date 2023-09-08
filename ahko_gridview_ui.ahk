@@ -1,6 +1,7 @@
 
 
 #Include Gdip_All.ahk
+pGDI := Gdip_Startup()
 
 class ahko_gridview_class
 {
@@ -161,7 +162,19 @@ class ahko_gridview_class
 
 	gui_add_btn(obj, x, y, w, h, opt:="", title:="", callback:="")
 	{
-		btn:=obj.add("Button", "x" x " y" y " w" w " h" h " " opt, " " title)
+		if(!this.use_gdip) {
+			btn:=obj.add("Button", "x" x " y" y " w" w " h" h " " opt, " " title)
+		} else {
+			btn:=obj.add("Picture", "x" x " y" y " w" w " h" h " 0xE 0x200 -Border",)
+
+			pBitmapBtn := Gdip_CreateBitmap(200, 200)
+			G := Gdip_GraphicsFromImage(pBitmapBtn)
+			pBrush:=Gdip_BrushCreateSolid(0xFF000000)
+			Gdip_FillRoundedRectangle(G, pBrush, 2, 2, 96, 96, 20)
+			Gdip_DeleteBrush(pBrush)
+			gui_pic_show_bitmap(btn, pBitmapBtn, 0, 0, 200, 200)
+			Gdip_DeleteGraphics(G), Gdip_DisposeImage(pBitmapBtn), DeleteObject(G)
+		}
 		if(callback) {
 			btn.OnEvent("Click", callback)
 		}
@@ -197,10 +210,12 @@ class ahko_gridview_class
 							this.buttonSize, this.buttonSize, , 
 							ahko_obj.name "`n<&" StrUpper(this.item_pos[grid_index].key) ">", 
 							callback)
-		iconPath:=ahko_obj.icon Or fileGethIcon(ahko_obj.path)
-		if(iconPath){
-			Try{
-				GuiButtonIcon(btn.hwnd, iconPath,, "a2 s100 t16")
+		if(!this.use_gdip) {
+			iconPath:=ahko_obj.icon Or fileGethIcon(ahko_obj.path)
+			if(iconPath){
+				Try{
+					GuiButtonIcon(btn.hwnd, iconPath,, "a2 s100 t16")
+				}
 			}
 		}
 	}
@@ -297,6 +312,31 @@ class ahko_gridview_class
 			Return cb
 		}
 	}
+}
+
+gui_pic_show_bitmap(GuiCtrlObj, pBitmap, sx:=0, sy:=0, sw:=0, sh:=0)
+{
+	Gdip_GetImageDimensions(pBitmap, &W, &H)
+	percentW:=sw/W
+	percentH:=sh/H
+	percent := Min(percentW, percentH)
+	if(percent==0) {
+		percent := 1
+	}
+
+	picW:=W*percent
+	picH:=H*percent
+
+	; msgbox(picW "`n" picH)
+
+	pBitmapShow := Gdip_CreateBitmap(picW, picH)
+	G := Gdip_GraphicsFromImage(pBitmapShow)
+	Gdip_SetSmoothingMode(G, 4)
+	Gdip_SetInterpolationMode(G, 7)
+	Gdip_DrawImage(G, pBitmap, sx, sy, picW, picH)
+	hBitmapShow := Gdip_CreateHBITMAPFromBitmap(pBitmapShow)
+	SetImage(GuiCtrlObj.hwnd, hBitmapShow)
+	Gdip_DeleteGraphics(G), Gdip_DisposeImage(pBitmapShow), DeleteObject(hBitmapShow)
 }
 
 ;{ GuiButtonIcon
