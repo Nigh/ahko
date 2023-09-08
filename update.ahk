@@ -1,11 +1,12 @@
 ﻿
 #include meta.ahk
 
-if FileExist("updater.exe")
-{
+if FileExist("updater.exe") {
 	FileDelete("updater.exe")
 }
-
+if !FileExist("setting.ini") {
+	IniWrite(version, "setting.ini", "update", "ver")
+}
 lastUpdate:=IniRead("setting.ini", "update", "last", 0)
 autoUpdate:=IniRead("setting.ini", "update", "autoupdate", 1)
 updateMirror:=IniRead("setting.ini", "update", "mirror", 1)
@@ -13,8 +14,6 @@ IniWrite(updateMirror, "setting.ini", "update", "mirror")
 mirrorList:=[
 	"https://github.com",
 	"https://ghproxy.com/https://github.com",
-	"https://download.fastgit.org",
-	"https://github.com.cnpmjs.org",
 ]
 updatemirrorTried:=Array()
 today:=A_MM . A_DD
@@ -78,7 +77,7 @@ tryNextUpdate()
 			Return
 		}
 	}
-	TrayTip "Status=" req.status, "update failed", 0x3
+	TrayTip "Update Timeout", "update failed", 0x3
 }
 ; with MSXML2.ServerXMLHTTP method, there would be multiple callback called
 

@@ -4,13 +4,6 @@ SetWorkingDir(A_ScriptDir)
 #SingleInstance force
 #include meta.ahk
 
-;@Ahk2Exe-SetCompanyName HelloWorks
-;@Ahk2Exe-SetName %appName%
-;@Ahk2Exe-SetDescription ahko
-;@Ahk2Exe-SetVersion %version%
-;@Ahk2Exe-SetMainIcon icon.ico
-;@Ahk2Exe-ExeName %appName%
-
 ;@Ahk2Exe-IgnoreBegin
 if A_Args.Length > 0
 {

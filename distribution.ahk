@@ -1,12 +1,24 @@
-; # requirements:
-; # ahk2exe.exe in PATH [1.1.34.00_Beta_8]
-; # AutoHotkey64.exe in PATH [v2.0-beta.3]
-; # mpress in ahk2exe path
-
 #SingleInstance Force
 SetWorkingDir(A_ScriptDir)
 
 #include meta.ahk
+
+try
+{
+	props := FileOpen("compile_prop.ahk", "w")
+	props.WriteLine(";@Ahk2Exe-SetName " appName)
+	props.WriteLine(";@Ahk2Exe-SetVersion " version)
+	props.WriteLine(";@Ahk2Exe-SetMainIcon icon.ico")
+	props.WriteLine(";@Ahk2Exe-SetCompanyName HelloWorks")
+	props.WriteLine(";@Ahk2Exe-SetDescription ahko")
+	props.WriteLine(";@Ahk2Exe-ExeName " appName)
+	props.Close()
+}
+catch as e
+{
+	MsgBox("Writting compile props`nERROR CODE=" . e.Message)
+	ExitApp
+}
 
 if FileExist(binaryFilename)
 {
@@ -35,7 +47,7 @@ DirCreate("dist")
 
 try
 {
-	RunWait("ahk2exe.exe /in updater.ahk /out updater.exe /base `"" A_AhkPath "`" /compress 1")
+	RunWait("./ahk-compile-toolset/ahk2exe.exe /in updater.ahk /out updater.exe /base `"" A_AhkPath "`" /compress 1")
 }
 catch as e
 {
@@ -45,7 +57,7 @@ catch as e
 
 try
 {
-	RunWait("ahk2exe.exe /in " ahkFilename " /out " binaryFilename " /base `"" A_AhkPath "`" /compress 1")
+	RunWait("./ahk-compile-toolset/ahk2exe.exe /in " ahkFilename " /out " binaryFilename " /base `"" A_AhkPath "`" /compress 1")
 }
 catch as e
 {
@@ -55,7 +67,7 @@ catch as e
 
 try
 {
-	RunWait("AutoHotkey64.exe .\" . ahkFilename . " --out=version")
+	RunWait("./ahk-compile-toolset/AutoHotkey64.exe .\" . ahkFilename . " --out=version")
 }
 catch as e
 {
