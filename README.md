@@ -1,12 +1,12 @@
-# ahko256
+# ahko
 
 > tested with Autohotkey 2.0.7 on Windows 11
 
-ahko256 is a quick launcher for windows.
+ahko is a quick launcher for windows.
 
 ## Screenshots
 
-### Gridview :
+### Native Gridview :
 
 ![](./assets/screenshot_gridview.png)
 
@@ -20,8 +20,8 @@ right click the `ahko` tray icon, and then click the `Setup`
 
 ## Usage
 
-ahko scans two levels of directories in the watch folder. The number of objects per directory level is limited to 16. This means that a maximum of 16x16 = 256 objects can be listed.
-This is because too many objects would NOT make the launcher "quick" enough.
+ahko scans two levels of directories in the watch folder.
+The number of objects per directory level is limited to `16`. So that a maximum of `16x16 = 256` objects can be used in ahko.
 
 ### icon
 
