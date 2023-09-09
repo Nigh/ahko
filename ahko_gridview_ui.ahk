@@ -78,7 +78,7 @@ class ahko_gridview_class
 				this.set_gui_transparent(sub_gui)
 			}
 			; add grid button
-			if(layer0.sub.Length > 0) {
+			if (layer0.sub.Length > 0) {
 				this.gui_add_grid_btn(this.grid_gui, k0, layer0, sub_gui)
 			}
 		}
@@ -99,7 +99,9 @@ class ahko_gridview_class
 				{
 					if not v.isHide
 					{
-						v.callback[n]()
+						if (v.callback.Has(n)) {
+							v.callback[n]()
+						}
 					}
 				}
 			}
