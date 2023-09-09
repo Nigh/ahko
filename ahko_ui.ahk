@@ -7,9 +7,9 @@ ahko_show(*)
 		if(!winwait("ahk_id " ahko_gridview.grid_gui.hwnd,,3)){
 			Return
 		}
-		Try{
-			WinActivate("ahk_id " ahko_gridview.grid_gui.hwnd)
-		}
+		; Try{
+		; 	WinActivate("ahk_id " ahko_gridview.grid_gui.hwnd)
+		; }
 	}
 }
 

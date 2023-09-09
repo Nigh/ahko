@@ -1768,8 +1768,8 @@ Gdip_CreateBitmapFromFile(sFile, IconNumber:=1, IconSize:="")
 				continue
 			}
 
-			hbmMask  := NumGet(buf, 12 + ((A_PtrSize ? A_PtrSize : 4) - 4))
-			hbmColor := NumGet(buf, 12 + ((A_PtrSize ? A_PtrSize : 4) - 4) + (A_PtrSize ? A_PtrSize : 4))
+			hbmMask  := NumGet(buf, 16, "UPtr")
+			hbmColor := NumGet(buf, 16 + A_PtrSize, "UPtr")
 			if !(hbmColor && DllCall("GetObject", "UPtr", hbmColor, "Int", BufSize, "UPtr", buf.Ptr))
 			{
 				DestroyIcon(hIcon)
@@ -1791,7 +1791,7 @@ Gdip_CreateBitmapFromFile(sFile, IconNumber:=1, IconSize:="")
 
 		dib := Buffer(104)
 		DllCall("GetObject", "UPtr", hbm, "Int", A_PtrSize = 8 ? 104 : 84, "UPtr", dib.Ptr) ; sizeof(DIBSECTION) = 76+2*(A_PtrSize=8?4:0)+2*A_PtrSize
-		Stride := NumGet(dib, 12, "Int"), Bits := NumGet(dib, 20 + (A_PtrSize = 8 ? 4 : 0)) ; padding
+		Stride := NumGet(dib, 12, "Int"), Bits := NumGet(dib, 20 + (A_PtrSize = 8 ? 4 : 0), "UPtr") ; padding
 		DllCall("gdiplus\GdipCreateBitmapFromScan0", "Int", Width, "Int", Height, "Int", Stride, "Int", 0x26200A, "UPtr", Bits, "UPtr*", &pBitmapOld:=0)
 		pBitmap := Gdip_CreateBitmap(Width, Height)
 		_G := Gdip_GraphicsFromImage(pBitmap)

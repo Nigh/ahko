@@ -1,7 +1,7 @@
 
 FileEncoding("UTF-8")
 appName:="ahko"
-version:="0.2.4"
+version:="0.3.0"
 versionFilename:="version.txt"
 ahkFilename:="app.ahk"
 binaryFilename:="ahko.exe"
@@ -10,7 +10,6 @@ downloadUrl:="/Nigh/ahko/releases/latest/download/"
 update_log:="
 (
 
-1. Now you can disable hotkey in fullscreen
-2. Now you can select where to show the launcher
+1. Add gdip version of grid view
 
 )"
