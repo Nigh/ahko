@@ -5,6 +5,8 @@ SetWorkingDir(A_ScriptDir)
 #SingleInstance force
 #include meta.ahk
 
+#include *i compile_prop.ahk
+
 ;@Ahk2Exe-IgnoreBegin
 if A_Args.Length > 0
 {
