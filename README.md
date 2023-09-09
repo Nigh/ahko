@@ -10,6 +10,10 @@ ahko is a quick launcher for windows.
 
 ![](./assets/screenshot_gridview.png)
 
+### GDIp Gridview :
+
+![image](https://github.com/Nigh/ahko/assets/1407471/74ca1700-c642-44cb-badd-0874a867e6b1)
+
 ## Setup
 
 ![](./assets/setup.png)
