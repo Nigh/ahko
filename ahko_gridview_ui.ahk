@@ -110,6 +110,7 @@ class ahko_gridview_class
 
 		HotIfWinExist("ahk_id " this.grid_gui.Hwnd)
 		hotkey("Escape", this.grid_gui.uHide)
+		hotkey("``", this.grid_gui.uHide)
 		For k, v in this.grid_gui.callback
 		{
 			if (v != "") {
