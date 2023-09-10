@@ -238,16 +238,19 @@ class ahko_gridview_class
 			}
 		} else {
 			pBitmapBtn := Gdip_CreateBitmap(this.buttonSize, this.buttonSize)
-			; MsgBox ahko_obj.path
-			fileinfo := Buffer(fisize := A_PtrSize + 688)
-			; Get the file's icon.
-			if DllCall("shell32\SHGetFileInfoW", "WStr", ahko_obj.path
-				, "UInt", 0, "Ptr", fileinfo, "UInt", fisize, "UInt", 0x100)
-			{
-				hicon := NumGet(fileinfo, 0, "Ptr")
-				; GetIconDimensions(hicon, &W, &H)
-				; MsgBox W "," H
-				pBitmapIcon := Gdip_CreateBitmapFromHICON(hicon)
+			if ahko_obj.icon {
+				pBitmapIcon := Gdip_CreateBitmapFromFile(ahko_obj.icon)
+			} else {
+				fileinfo := Buffer(fisize := A_PtrSize + 688)
+				; Get the file's icon.
+				if DllCall("shell32\SHGetFileInfoW", "WStr", ahko_obj.path
+					, "UInt", 0, "Ptr", fileinfo, "UInt", fisize, "UInt", 0x100)
+				{
+					hicon := NumGet(fileinfo, 0, "Ptr")
+					; GetIconDimensions(hicon, &W, &H)
+					; MsgBox W "," H
+					pBitmapIcon := Gdip_CreateBitmapFromHICON(hicon)
+				}
 			}
 			G := Gdip_GraphicsFromImage(pBitmapBtn)
 			pBrush := Gdip_BrushCreateSolid(0xFFAAAAAA)
