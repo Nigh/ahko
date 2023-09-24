@@ -1,10 +1,8 @@
-
-
 ahko_show(*)
 {
-	if(uiType=="1" || uiType=="2") {
+	if (uiType == "1" || uiType == "2") {
 		ahko_gridview.Show()
-		if(!winwait("ahk_id " ahko_gridview.grid_gui.hwnd,,3)){
+		if (!winwait("ahk_id " ahko_gridview.grid_gui.hwnd, , 3)) {
 			Return
 		}
 		; Try{
@@ -16,11 +14,11 @@ ahko_show(*)
 ahko_ui_init(*)
 {
 	global
-	if(uiType=="1") {
+	if (uiType == "1") {
 		ahko_gridview := ahko_gridview_class()
 		ahko_gridview.showat := showat
 	}
-	if(uiType=="2") {
+	if (uiType == "2") {
 		ahko_gridview := ahko_gridview_class(1)
 		ahko_gridview.showat := showat
 	}

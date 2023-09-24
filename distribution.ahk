@@ -77,7 +77,7 @@ catch as e
 
 try
 {
-	RunWait("powershell -command `"Compress-Archive -Path .\" binaryFilename " -DestinationPath " downloadFilename '"',, "Hide")
+	RunWait("powershell -command `"Compress-Archive -Path .\" binaryFilename " -DestinationPath " downloadFilename '"', , "Hide")
 }
 catch as e
 {
