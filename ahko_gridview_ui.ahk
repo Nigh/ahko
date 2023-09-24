@@ -209,9 +209,13 @@ class ahko_gridview_class
 				if (sub_grid != "" && InStr(ahko_obj.attrib, "D")) {
 					sub_grid.uShow()
 				} else if (ahko_obj != "") {
-					SplitPath(ahko_obj.path, , &atDir)
+					SplitPath(ahko_obj.path, , &atDir, &ext)
 					Try {
-						Run(ahko_obj.path, atDir)
+						if (StrCompare(ext, "ahk") != 0) {
+							Run(ahko_obj.path, atDir)
+						} else {
+							Run('"' A_ScriptFullPath '" /script /force "' ahko_obj.path '"')
+						}
 					}
 				} else {
 					this.Show()

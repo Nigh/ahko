@@ -19,6 +19,9 @@ if A_Args.Length > 0
 			f.Close()
 			ExitApp
 		}
+		if(RegExMatch(param, "--run=(.+\.ahk)", &scriptPath)) {
+			Run('"' A_ScriptFullPath '" /script /force "' scriptPath[1] '"')
+		}
 	}
 }
 _exit(ThisHotkey){
