@@ -9,31 +9,23 @@ class ahko_gridview_class
 	grid_sub_gui := []
 	use_gdip := 0
 
-	item_pos := Array({
-		x: 0,
-		y: 0,
-		key: '1'
-	}, { x: 1, y: 0, key: '2' }, { x: 2, y: 0, key: '3' }, {
-		x: 0.5,
-		y: 1,
-		key: 'q'
-	}, { x: 1.5, y: 1, key: 'w' }, { x: 2.5, y: 1, key: 'e' }, {
-		x: 1,
-		y: 2,
-		key: 'a'
-	}, { x: 2, y: 2, key: 's' }, { x: 3, y: 2, key: 'd' }, {
-		x: 3,
-		y: 0,
-		key: '4'
-	}, { x: 3.5, y: 1, key: 'r' }, { x: 4, y: 2, key: 'f' }, {
-		x: 1.5,
-		y: 3,
-		key: 'z'
-	}, { x: 2.5, y: 3, key: 'x' }, { x: 3.5, y: 3, key: 'c' }, {
-		x: 4.5,
-		y: 3,
-		key: 'v'
-	})
+	item_pos := Array(
+		{ x: 0, y: 0, key: '1' }, 
+		{ x: 1, y: 0, key: '2' }, 
+		{ x: 2, y: 0, key: '3' }, 
+		{ x: 0.5, y: 1, key: 'q' }, 
+		{ x: 1.5, y: 1, key: 'w' }, 
+		{ x: 2.5, y: 1, key: 'e' }, 
+		{ x: 1, y: 2, key: 'a' }, 
+		{ x: 2, y: 2, key: 's' }, 
+		{ x: 3, y: 2, key: 'd' }, 
+		{ x: 3, y: 0, key: '4' }, 
+		{ x: 3.5, y: 1, key: 'r' }, 
+		{ x: 4, y: 2, key: 'f' }, 
+		{ x: 1.5, y: 3, key: 'z' }, 
+		{ x: 2.5, y: 3, key: 'x' }, 
+		{ x: 3.5, y: 3, key: 'c' }, 
+		{ x: 4.5, y: 3, key: 'v' })
 	buttonSize := 200
 	outerIndex := 1
 	gmargin := 10
