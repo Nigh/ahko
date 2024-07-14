@@ -48,8 +48,13 @@ TrayTip "ahko start at " path, "ahko", 0x14
 ahko := []
 ahko_init(&ahko, path)
 {
+	local icon_map_outer := Map()
 	Loop files path "\*", "FD"
 	{
+		if (RegExMatch(A_LoopFileName, "(.+)\.png$", &iconFileName_outer)) {
+			icon_map_outer.set(iconFileName_outer[1], A_LoopFileFullPath)
+			Continue
+		}
 		ahko.Push({ name: filenameWithoutExt(A_LoopFileName), attrib: A_LoopFileAttrib, path: A_LoopFileFullPath, sub: [], icon: "" })
 		if (InStr(A_LoopFileAttrib, "D")) {
 			local icon_map := Map()
@@ -76,9 +81,18 @@ ahko_init(&ahko, path)
 					v.icon := icon_map.Get(v.name)
 				}
 			}
+			if (target_count == 0) {
+				ahko.Pop()
+			}
 		}
 		if (A_Index >= 16) {
 			Break
+		}
+	}
+	for k, v in ahko
+	{
+		if (icon_map_outer.Has(v.name)) {
+			v.icon := icon_map_outer.Get(v.name)
 		}
 	}
 }

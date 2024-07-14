@@ -68,10 +68,12 @@ class ahko_gridview_class
 					this.gui_add_grid_btn(sub_gui, k1, layer1)
 				}
 				this.set_gui_transparent(sub_gui)
-			}
-			; add grid button
-			if (layer0.sub.Length > 0) {
-				this.gui_add_grid_btn(this.grid_gui, k0, layer0, sub_gui)
+				; add grid button
+				if (layer0.sub.Length > 0) {
+					this.gui_add_grid_btn(this.grid_gui, k0, layer0, sub_gui)
+				}
+			} else {
+				this.gui_add_grid_btn(this.grid_gui, k0, layer0, "")
 			}
 		}
 		this.set_gui_transparent(this.grid_gui)
