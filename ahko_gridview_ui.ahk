@@ -30,8 +30,12 @@ class ahko_gridview_class
 	outerIndex := 1
 	gmargin := 10
 	titleHeight := 42
+	item_map := Map()
 
 	__New(gdip := 0) {
+		for k, v in this.item_pos {
+			this.item_map[v.key] := { idx: k, x: v.x, y: v.y }
+		}
 		this.use_gdip := gdip
 		this.set_gui_default_prop(this.grid_gui)
 		this.grid_gui.size := {
@@ -39,41 +43,41 @@ class ahko_gridview_class
 			h: 4 * (this.buttonSize + this.gmargin) + this.titleHeight
 		}
 		; add title button
-		this.gui_add_btn(this.grid_gui,"",
-		0,
-		1,
-		this.buttonSize,
-		this.titleHeight,
-		"left",
-		" ahko","")
+		this.gui_add_btn(this.grid_gui, "",
+			0,
+			1,
+			this.buttonSize,
+			this.titleHeight,
+			"left",
+			" ahko", "")
 
-		For k0, layer0 in ahko
+		For layer0 in ahko
 		{
 			if (InStr(layer0.attrib, "D")) {
 				sub_gui := this.sub_gui_push()
 				; add title button
-				btn := this.gui_add_btn(sub_gui,"",
-				0,
-				1,
-				this.buttonSize,
-				this.titleHeight,
-				"left",
-				layer0.name,"",
-				this.uShow)
+				btn := this.gui_add_btn(sub_gui, "",
+					0,
+					1,
+					this.buttonSize,
+					this.titleHeight,
+					"left",
+					layer0.name, "",
+					this.uShow)
 				btn.father_gui := this.grid_gui
 				; create sub grid
-				For k1, layer1 in layer0.sub
+				For layer1 in layer0.sub
 				{
 					; add item button
-					this.gui_add_grid_btn(sub_gui, k1, layer1)
+					this.gui_add_grid_btn(sub_gui, layer1)
 				}
 				this.set_gui_transparent(sub_gui)
 				; add grid button
 				if (layer0.sub.Length > 0) {
-					this.gui_add_grid_btn(this.grid_gui, k0, layer0, sub_gui)
+					this.gui_add_grid_btn(this.grid_gui, layer0, sub_gui)
 				}
 			} else {
-				this.gui_add_grid_btn(this.grid_gui, k0, layer0, "")
+				this.gui_add_grid_btn(this.grid_gui, layer0, "")
 			}
 		}
 		this.set_gui_transparent(this.grid_gui)
@@ -81,15 +85,9 @@ class ahko_gridview_class
 	}
 
 	hotkey_setup() {
-		this.revkeyList := map()
-		For k, v in this.item_pos
-		{
-			this.revkeyList[v.key] := k
-		}
-
 		subgrid_func_maker(n) {
 			select(*) {
-				For , v in this.grid_sub_gui
+				For v in this.grid_sub_gui
 				{
 					if not v.isHide
 					{
@@ -107,9 +105,7 @@ class ahko_gridview_class
 		hotkey("``", this.grid_gui.uHide)
 		For k, v in this.grid_gui.callback
 		{
-			if (v != "") {
-				hotkey(this.item_pos[k].key, v)
-			}
+			hotkey(k, v)
 		}
 		HotIf
 
@@ -119,9 +115,9 @@ class ahko_gridview_class
 		HotIfWinExist("ahk_group subgridGroup")
 		hotkey("Escape", this.subHide)
 		hotkey("``", subgrid_return)
-		Loop 16
+		For k, v in this.item_map
 		{
-			hotkey(this.item_pos[A_Index].key, subgrid_func_maker(A_Index))
+			hotkey(k, subgrid_func_maker(k))
 		}
 		HotIf
 	}
@@ -187,7 +183,7 @@ class ahko_gridview_class
 		if (!this.use_gdip) {
 			title := name "`n<&" StrUpper(key) ">"
 			btn := guiobj.add("Button", "x" x " y" y " w" w " h" h " " opt, title)
-			if(IsObject(ahko_obj)) {
+			if (IsObject(ahko_obj)) {
 				iconPath := ahko_obj.icon Or fileGethIcon(ahko_obj.path)
 				if (iconPath) {
 					Try {
@@ -200,7 +196,7 @@ class ahko_gridview_class
 
 			pBitmapBtn := Gdip_CreateBitmap(w, h)
 			local pBitmapIcon := 0
-			if(IsObject(ahko_obj)) {
+			if (IsObject(ahko_obj)) {
 				if ahko_obj.icon {
 					pBitmapIcon := Gdip_CreateBitmapFromFile(ahko_obj.icon)
 				} else {
@@ -230,7 +226,7 @@ class ahko_gridview_class
 				Gdip_DrawImage(G, pBitmapIcon, 50, 30, 100, 100)
 				Gdip_DisposeImage(pBitmapIcon)
 			}
-			if(IsObject(ahko_obj)) {
+			if (IsObject(ahko_obj)) {
 				xy := size_percent(this.buttonSize, 6)
 				wh := size_percent(this.buttonSize, 13)
 				; this.titleHeight,
@@ -248,7 +244,7 @@ class ahko_gridview_class
 		Return btn
 	}
 
-	gui_add_grid_btn(guiobj, grid_index, ahko_obj, sub_grid := "")
+	gui_add_grid_btn(guiobj, ahko_obj, sub_grid := "")
 	{
 		callback_maker() {
 			callback(*) {
@@ -274,13 +270,14 @@ class ahko_gridview_class
 		if (!guiobj.HasOwnProp("callback")) {
 			guiobj.callback := map()
 		}
-		guiobj.callback[grid_index] := callback
+
+		guiobj.callback[ahko_obj.key] := callback
 		btn := this.gui_add_btn(guiobj, ahko_obj,
-		this.item_pos[grid_index].x * (this.buttonSize + this.gmargin),
-		this.item_pos[grid_index].y * (this.buttonSize + this.gmargin) + this.titleHeight + this.gmargin,
-		this.buttonSize, this.buttonSize, ,
-		ahko_obj.name, this.item_pos[grid_index].key,
-		callback)
+			this.item_map[ahko_obj.key].x * (this.buttonSize + this.gmargin),
+			this.item_map[ahko_obj.key].y * (this.buttonSize + this.gmargin) + this.titleHeight + this.gmargin,
+			this.buttonSize, this.buttonSize, ,
+			ahko_obj.name, ahko_obj.key,
+			callback)
 	}
 
 	gui_showat()
@@ -340,7 +337,7 @@ class ahko_gridview_class
 	}
 
 	_subHide() {
-		For , v in this.grid_sub_gui
+		For v in this.grid_sub_gui
 		{
 			if (!v.isHide) {
 				v.uHide()
@@ -373,7 +370,7 @@ class ahko_gridview_class
 						Return
 					}
 				}
-				For , v in this.grid_sub_gui
+				For v in this.grid_sub_gui
 				{
 					if (!v.isHide) {
 						active_count += 1
