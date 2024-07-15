@@ -5,7 +5,7 @@ Persistent
 path := IniRead("setting.ini", "dir", "path", "")
 hotkeys := IniRead("setting.ini", "hotkey", "key", "!q")
 fullscreen_enable := IniRead("setting.ini", "hotkey", "fullscreen", "0")
-uiType_list := "1|2|3"
+uiType_list := "1|2"
 uiType := IniRead("setting.ini", "ui", "type", "1")
 if not RegExMatch(uiType, uiType_list)
 {

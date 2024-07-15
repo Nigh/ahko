@@ -16,7 +16,7 @@ ahko_setup.Add("Text", "x0 y+-66 +BackgroundTrans", "________")
 ahko_setup.SetFont(h2FontStyle)
 ahko_setup.Add("Text", "x30 y+20 section", "UI type")
 ahko_setup.SetFont(textFontStyle)
-ahkoSetup_uiType := ahko_setup.Add("DropDownList", item_gap "w" clientWidth, ["Native Gridview", "GDIp Gridview", "WebView"])
+ahkoSetup_uiType := ahko_setup.Add("DropDownList", item_gap "w" clientWidth, ["GDIp", "Native"])
 ahkoSetup_uiType.OnEvent("Change", uiType_update)
 uiType_update(*) {
 	if (ahkoSetup_uiType.Value > 2) {
@@ -188,8 +188,7 @@ ahko_setup_save(*) {
 
 ahko_setup_check(*) {
 	global
-	; MsgBox(ahkoSetup_hotkey.Value,,"Owner" ahko_setup.Hwnd)
-	if (ahkoSetup_uiType.Value < 1 || ahkoSetup_uiType.Value > 3) {
+	if (ahkoSetup_uiType.Value < 1 || ahkoSetup_uiType.Value > 2) {
 		MsgBox("Invalid UI type", "Error", "Owner" ahko_setup.Hwnd)
 		Return False
 	}
