@@ -211,11 +211,11 @@ ahko_setup_autostart(b) {
 	Return
 	;@Ahk2Exe-IgnoreEnd
 	DirCreate(A_Temp "\ahko_temp")
-	FileInstall(".\set_auto_run\startup.exe", A_Temp "\ahko_temp\startup.exe", 1)
+	FileInstall(".\set_auto_run.ahk", A_Temp "\ahko_temp\set_auto_run.ahk", 1)
 	if (b) {
-		runwait(A_Temp "\ahko_temp\startup.exe --name=ahko --target=" A_ScriptFullPath)
+		RunWait('"' A_ScriptFullPath '" /script /force "' A_Temp "\ahko_temp\set_auto_run.ahk" '"' " --name=ahko --target=" A_ScriptFullPath)
 	} else {
-		runwait(A_Temp "\ahko_temp\startup.exe --name=ahko --remove")
+		RunWait('"' A_ScriptFullPath '" /script /force "' A_Temp "\ahko_temp\set_auto_run.ahk" '"' " --name=ahko --remove" )
 	}
 	try {
 		FileDelete(A_Temp "\ahko_temp\startup.exe")

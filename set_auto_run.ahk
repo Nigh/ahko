@@ -1,16 +1,4 @@
 
-
-;@Ahk2Exe-SetCompanyName HelloWorks
-;@Ahk2Exe-SetName SAR
-;@Ahk2Exe-SetVersion 0.0.0
-;@Ahk2Exe-ExeName startup
-
-;@Ahk2Exe-IgnoreBegin
-	MsgBox("Only works for compiled script")
-	ExitApp
-;@Ahk2Exe-IgnoreEnd
-
-
 target:=""
 name:=""
 remove:=false
@@ -30,6 +18,7 @@ for n, param in A_Args
 		remove:=true
 	}
 }
+
 if(name=="") {
 	ExitApp -1
 }
