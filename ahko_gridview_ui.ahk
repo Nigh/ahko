@@ -87,7 +87,7 @@ class ahko_gridview_class
 	hotkey_setup() {
 		subgrid_func_maker(n) {
 			select(*) {
-				For , v in this.grid_sub_gui
+				For v in this.grid_sub_gui
 				{
 					if not v.isHide
 					{
@@ -105,9 +105,7 @@ class ahko_gridview_class
 		hotkey("``", this.grid_gui.uHide)
 		For k, v in this.grid_gui.callback
 		{
-			if (v != "") {
-				hotkey(this.item_pos[k].key, v)
-			}
+			hotkey(k, v)
 		}
 		HotIf
 
@@ -117,9 +115,9 @@ class ahko_gridview_class
 		HotIfWinExist("ahk_group subgridGroup")
 		hotkey("Escape", this.subHide)
 		hotkey("``", subgrid_return)
-		Loop 16
+		For k, v in this.item_map
 		{
-			hotkey(this.item_pos[A_Index].key, subgrid_func_maker(A_Index))
+			hotkey(k, subgrid_func_maker(k))
 		}
 		HotIf
 	}
@@ -273,7 +271,7 @@ class ahko_gridview_class
 			guiobj.callback := map()
 		}
 
-		guiobj.callback[this.item_map[ahko_obj.key].idx] := callback
+		guiobj.callback[ahko_obj.key] := callback
 		btn := this.gui_add_btn(guiobj, ahko_obj,
 			this.item_map[ahko_obj.key].x * (this.buttonSize + this.gmargin),
 			this.item_map[ahko_obj.key].y * (this.buttonSize + this.gmargin) + this.titleHeight + this.gmargin,
@@ -339,7 +337,7 @@ class ahko_gridview_class
 	}
 
 	_subHide() {
-		For , v in this.grid_sub_gui
+		For v in this.grid_sub_gui
 		{
 			if (!v.isHide) {
 				v.uHide()
@@ -372,7 +370,7 @@ class ahko_gridview_class
 						Return
 					}
 				}
-				For , v in this.grid_sub_gui
+				For v in this.grid_sub_gui
 				{
 					if (!v.isHide) {
 						active_count += 1
