@@ -54,9 +54,9 @@ ahko_setup.SetFont(h2FontStyle)
 ahko_setup.Add("Text", "xs " header_gap, "ahko where")
 ahko_setup.SetFont(textFontStyle)
 showAtDDL := ["Primary monitor", "Follow mouse", "Follow active window"]
-For k, v in isFullScreen.monitors
+For k_ddl, v_ddl in isFullScreen.monitors
 {
-	showAtDDL.Push("Monitor #" k)
+	showAtDDL.Push("Monitor #" k_ddl)
 }
 ahkoSetup_showAt := ahko_setup.Add("DropDownList", item_gap "w" clientWidth, showAtDDL)
 ahkoSetup_showAt.OnEvent("Change", showAt_update)
