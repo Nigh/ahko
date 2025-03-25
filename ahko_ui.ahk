@@ -15,11 +15,11 @@ ahko_ui_init(*)
 {
 	global
 	if (uiType == "1") {
-		ahko_gridview := ahko_gridview_class()
+		ahko_gridview := ahko_gridview_class(1)
 		ahko_gridview.showat := showat
 	}
 	if (uiType == "2") {
-		ahko_gridview := ahko_gridview_class(1)
+		ahko_gridview := ahko_gridview_class(0)
 		ahko_gridview.showat := showat
 	}
 }
