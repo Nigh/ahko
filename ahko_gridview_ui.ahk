@@ -49,7 +49,7 @@ class ahko_gridview_class
 			this.buttonSize,
 			this.titleHeight,
 			"left",
-			" ahko", "")
+			" ahko", "", this.grid_gui.uHide)
 
 		For layer0 in ahko
 		{
