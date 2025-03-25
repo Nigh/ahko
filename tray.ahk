@@ -1,7 +1,6 @@
-﻿
-gotoWebpage_maker(page)
+﻿gotoWebpage_maker(page)
 {
-	webpage(*){
+	webpage(*) {
 		Run(page)
 	}
 	return webpage
@@ -10,17 +9,17 @@ gotoWebpage_maker(page)
 setTray()
 {
 	global version, trueExit, customTrayMenu
-	trayExit(*){
-		trueExit("","")
+	trayExit(*) {
+		trueExit("", "")
 	}
-	Reloads(*){
+	Reloads(*) {
 		Reload
 	}
 	tray := A_TrayMenu
 	tray.delete
-	tray.add("v" . version, (*)=>{})
+	tray.add("v" . version, (*) => {})
 	tray.add()
-	if(customTrayMenu.HasOwnProp("valid") && customTrayMenu.HasOwnProp("menu")) {
+	if (customTrayMenu.HasOwnProp("valid") && customTrayMenu.HasOwnProp("menu")) {
 		For , Value in customTrayMenu.menu
 		{
 			tray.add(Value.name, Value.func)

@@ -45,13 +45,10 @@ if InStr(FileExist("dist"), "D")
 
 DirCreate("dist")
 
-try
-{
-	RunWait("./ahk-compile-toolset/ahk2exe.exe /in updater.ahk /out updater.exe /base `"" A_AhkPath "`" /compress 1")
-}
-catch as e
-{
-	MsgBox("updater.ahk`nERROR CODE=" . e.Message)
+try {
+	RunWait("./ahk-compile-toolset/tcc/tcc.exe ./updater.c -luser32")
+} catch as e {
+	MsgBox("updater compile`nERROR CODE=" . e.Message)
 	ExitApp
 }
 
@@ -77,7 +74,7 @@ catch as e
 
 try
 {
-	RunWait("powershell -command `"Compress-Archive -Path .\" binaryFilename " -DestinationPath " downloadFilename '"',, "Hide")
+	RunWait("powershell -command `"Compress-Archive -Path .\" binaryFilename " -DestinationPath " downloadFilename '"', , "Hide")
 }
 catch as e
 {

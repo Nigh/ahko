@@ -9,37 +9,33 @@ class ahko_gridview_class
 	grid_sub_gui := []
 	use_gdip := 0
 
-	item_pos := Array({
-		x: 0,
-		y: 0,
-		key: '1'
-	}, { x: 1, y: 0, key: '2' }, { x: 2, y: 0, key: '3' }, {
-		x: 0.5,
-		y: 1,
-		key: 'q'
-	}, { x: 1.5, y: 1, key: 'w' }, { x: 2.5, y: 1, key: 'e' }, {
-		x: 1,
-		y: 2,
-		key: 'a'
-	}, { x: 2, y: 2, key: 's' }, { x: 3, y: 2, key: 'd' }, {
-		x: 3,
-		y: 0,
-		key: '4'
-	}, { x: 3.5, y: 1, key: 'r' }, { x: 4, y: 2, key: 'f' }, {
-		x: 1.5,
-		y: 3,
-		key: 'z'
-	}, { x: 2.5, y: 3, key: 'x' }, { x: 3.5, y: 3, key: 'c' }, {
-		x: 4.5,
-		y: 3,
-		key: 'v'
-	})
+	item_pos := Array(
+	{ x: 0, y: 0, key: '1' }, 
+	{ x: 1, y: 0, key: '2' }, 
+	{ x: 2, y: 0, key: '3' }, 
+	{ x: 0.5, y: 1, key: 'q' }, 
+	{ x: 1.5, y: 1, key: 'w' }, 
+	{ x: 2.5, y: 1, key: 'e' }, 
+	{ x: 1, y: 2, key: 'a' }, 
+	{ x: 2, y: 2, key: 's' }, 
+	{ x: 3, y: 2, key: 'd' }, 
+	{ x: 3, y: 0, key: '4' }, 
+	{ x: 3.5, y: 1, key: 'r' }, 
+	{ x: 4, y: 2, key: 'f' }, 
+	{ x: 1.5, y: 3, key: 'z' }, 
+	{ x: 2.5, y: 3, key: 'x' }, 
+	{ x: 3.5, y: 3, key: 'c' }, 
+	{ x: 4.5, y: 3, key: 'v' })
 	buttonSize := 200
 	outerIndex := 1
 	gmargin := 10
-	titleHeight := 40
+	titleHeight := 42
+	item_map := Map()
 
 	__New(gdip := 0) {
+		for k, v in this.item_pos {
+			this.item_map[v.key] := { idx: k, x: v.x, y: v.y }
+		}
 		this.use_gdip := gdip
 		this.set_gui_default_prop(this.grid_gui)
 		this.grid_gui.size := {
@@ -47,39 +43,41 @@ class ahko_gridview_class
 			h: 4 * (this.buttonSize + this.gmargin) + this.titleHeight
 		}
 		; add title button
-		this.gui_add_btn(this.grid_gui,
+		this.gui_add_btn(this.grid_gui, "",
 			0,
 			1,
 			this.buttonSize,
 			this.titleHeight,
 			"left",
-			" ahko")
+			" ahko", "")
 
-		For k0, layer0 in ahko
+		For layer0 in ahko
 		{
 			if (InStr(layer0.attrib, "D")) {
 				sub_gui := this.sub_gui_push()
 				; add title button
-				btn := this.gui_add_btn(sub_gui,
+				btn := this.gui_add_btn(sub_gui, "",
 					0,
 					1,
 					this.buttonSize,
 					this.titleHeight,
 					"left",
-					layer0.name,
+					layer0.name, "",
 					this.uShow)
 				btn.father_gui := this.grid_gui
 				; create sub grid
-				For k1, layer1 in layer0.sub
+				For layer1 in layer0.sub
 				{
 					; add item button
-					this.gui_add_grid_btn(sub_gui, k1, layer1)
+					this.gui_add_grid_btn(sub_gui, layer1)
 				}
 				this.set_gui_transparent(sub_gui)
-			}
-			; add grid button
-			if (layer0.sub.Length > 0) {
-				this.gui_add_grid_btn(this.grid_gui, k0, layer0, sub_gui)
+				; add grid button
+				if (layer0.sub.Length > 0) {
+					this.gui_add_grid_btn(this.grid_gui, layer0, sub_gui)
+				}
+			} else {
+				this.gui_add_grid_btn(this.grid_gui, layer0, "")
 			}
 		}
 		this.set_gui_transparent(this.grid_gui)
@@ -87,15 +85,9 @@ class ahko_gridview_class
 	}
 
 	hotkey_setup() {
-		this.revkeyList := map()
-		For k, v in this.item_pos
-		{
-			this.revkeyList[v.key] := k
-		}
-
 		subgrid_func_maker(n) {
 			select(*) {
-				For , v in this.grid_sub_gui
+				For v in this.grid_sub_gui
 				{
 					if not v.isHide
 					{
@@ -113,9 +105,7 @@ class ahko_gridview_class
 		hotkey("``", this.grid_gui.uHide)
 		For k, v in this.grid_gui.callback
 		{
-			if (v != "") {
-				hotkey(this.item_pos[k].key, v)
-			}
+			hotkey(k, v)
 		}
 		HotIf
 
@@ -125,9 +115,9 @@ class ahko_gridview_class
 		HotIfWinExist("ahk_group subgridGroup")
 		hotkey("Escape", this.subHide)
 		hotkey("``", subgrid_return)
-		Loop 16
+		For k, v in this.item_map
 		{
-			hotkey(this.item_pos[A_Index].key, subgrid_func_maker(A_Index))
+			hotkey(k, subgrid_func_maker(k))
 		}
 		HotIf
 	}
@@ -188,12 +178,65 @@ class ahko_gridview_class
 		return runner
 	}
 
-	gui_add_btn(obj, x, y, w, h, opt := "", title := "", callback := "")
+	gui_add_btn(guiobj, ahko_obj, x, y, w, h, opt := "", name := "", key := "", callback := "")
 	{
 		if (!this.use_gdip) {
-			btn := obj.add("Button", "x" x " y" y " w" w " h" h " " opt, " " title)
+			title := name "`n<&" StrUpper(key) ">"
+			btn := guiobj.add("Button", "x" x " y" y " w" w " h" h " " opt, title)
+			if (IsObject(ahko_obj)) {
+				iconPath := ahko_obj.icon Or fileGethIcon(ahko_obj.path)
+				if (iconPath) {
+					Try {
+						GuiButtonIcon(btn.hwnd, iconPath, , "a2 s100 t16")
+					}
+				}
+			}
 		} else {
-			btn := obj.add("Picture", "x" x " y" y " w" w " h" h " 0xE 0x200 -Border",)
+			btn := guiobj.add("Picture", "x" x " y" y " w" w " h" h " 0xE 0x200 -Border",)
+
+			pBitmapBtn := Gdip_CreateBitmap(w, h)
+			local pBitmapIcon := 0
+			if (IsObject(ahko_obj)) {
+				if ahko_obj.icon {
+					pBitmapIcon := Gdip_CreateBitmapFromFile(ahko_obj.icon)
+				} else {
+					fileinfo := Buffer(fisize := A_PtrSize + 688)
+					; Get the file's icon.
+					if DllCall("shell32\SHGetFileInfoW", "WStr", ahko_obj.path
+						, "UInt", 0, "Ptr", fileinfo, "UInt", fisize, "UInt", 0x100)
+					{
+						hicon := NumGet(fileinfo, 0, "Ptr")
+						; GetIconDimensions(hicon, &W, &H)
+						; MsgBox W "," H
+						pBitmapIcon := Gdip_CreateBitmapFromHICON(hicon)
+					}
+				}
+			}
+			G := Gdip_GraphicsFromImage(pBitmapBtn)
+			pBrush := Gdip_BrushCreateSolid(0xFFAAAAAA)
+			Gdip_FillRoundedRectangle(G, pBrush, 1, 1, w - 2, h - 2, 16)
+			Gdip_DeleteBrush(pBrush)
+			pBrush := Gdip_BrushCreateSolid(0xFF010101)
+			Gdip_FillRoundedRectangle(G, pBrush, 3, 3, w - 6, h - 6, 16)
+			Gdip_DeleteBrush(pBrush)
+			Gdip_SetCompositingMode(G)
+			if (pBitmapIcon) {
+				Gdip_SetSmoothingMode(G, 4)
+				Gdip_SetInterpolationMode(G, 7)
+				Gdip_DrawImage(G, pBitmapIcon, 50, 30, 100, 100)
+				Gdip_DisposeImage(pBitmapIcon)
+			}
+			if (IsObject(ahko_obj)) {
+				xy := size_percent(this.buttonSize, 6)
+				wh := size_percent(this.buttonSize, 13)
+				; this.titleHeight,
+				Gdip_TextToGraphics(G, StrUpper(key), "x" xy " y" xy " w" wh " h" wh " cffffffff s" size_percent(this.buttonSize, 12) " R4")
+				Gdip_TextToGraphics(G, name, "x" size_percent(this.buttonSize, 2.5) " y" size_percent(this.buttonSize, 70) " w" size_percent(this.buttonSize, 95) " h" size_percent(this.buttonSize, 24) " vCenter Center cffffffff s" size_percent(this.buttonSize, 11) " R4", "Microsoft JhengHei")
+			} else {
+				Gdip_TextToGraphics(G, name, "x" size_percent(this.buttonSize, 2) " y" size_percent(this.buttonSize, 2) " w" size_percent(this.buttonSize, 96) " h" size_percent(this.titleHeight, 96) " vCenter Center cffffffff s" size_percent(this.buttonSize, 11) " R4", "Microsoft JhengHei")
+			}
+			gui_pic_show_bitmap(btn, pBitmapBtn, 0, 0, w, h)
+			Gdip_DeleteGraphics(G), Gdip_DisposeImage(pBitmapBtn), DeleteObject(G)
 		}
 		if (callback) {
 			btn.OnEvent("Click", callback)
@@ -201,7 +244,7 @@ class ahko_gridview_class
 		Return btn
 	}
 
-	gui_add_grid_btn(guiobj, grid_index, ahko_obj, sub_grid := "")
+	gui_add_grid_btn(guiobj, ahko_obj, sub_grid := "")
 	{
 		callback_maker() {
 			callback(*) {
@@ -209,9 +252,13 @@ class ahko_gridview_class
 				if (sub_grid != "" && InStr(ahko_obj.attrib, "D")) {
 					sub_grid.uShow()
 				} else if (ahko_obj != "") {
-					SplitPath(ahko_obj.path, , &atDir)
+					SplitPath(ahko_obj.path, , &atDir, &ext)
 					Try {
-						Run(ahko_obj.path, atDir)
+						if (StrCompare(ext, "ahk") != 0) {
+							Run(ahko_obj.path, atDir)
+						} else {
+							Run('"' A_ScriptFullPath '" /script /force "' ahko_obj.path '"')
+						}
 					}
 				} else {
 					this.Show()
@@ -223,56 +270,14 @@ class ahko_gridview_class
 		if (!guiobj.HasOwnProp("callback")) {
 			guiobj.callback := map()
 		}
-		guiobj.callback[grid_index] := callback
-		btn := this.gui_add_btn(guiobj,
-			this.item_pos[grid_index].x * (this.buttonSize + this.gmargin),
-			this.item_pos[grid_index].y * (this.buttonSize + this.gmargin) + this.titleHeight + this.gmargin,
-			this.buttonSize, this.buttonSize, ,
-			ahko_obj.name "`n<&" StrUpper(this.item_pos[grid_index].key) ">",
-			callback)
-		if (!this.use_gdip) {
-			iconPath := ahko_obj.icon Or fileGethIcon(ahko_obj.path)
-			if (iconPath) {
-				Try {
-					GuiButtonIcon(btn.hwnd, iconPath, , "a2 s100 t16")
-				}
-			}
-		} else {
-			pBitmapBtn := Gdip_CreateBitmap(this.buttonSize, this.buttonSize)
-			if ahko_obj.icon {
-				pBitmapIcon := Gdip_CreateBitmapFromFile(ahko_obj.icon)
-			} else {
-				fileinfo := Buffer(fisize := A_PtrSize + 688)
-				; Get the file's icon.
-				if DllCall("shell32\SHGetFileInfoW", "WStr", ahko_obj.path
-					, "UInt", 0, "Ptr", fileinfo, "UInt", fisize, "UInt", 0x100)
-				{
-					hicon := NumGet(fileinfo, 0, "Ptr")
-					; GetIconDimensions(hicon, &W, &H)
-					; MsgBox W "," H
-					pBitmapIcon := Gdip_CreateBitmapFromHICON(hicon)
-				}
-			}
-			G := Gdip_GraphicsFromImage(pBitmapBtn)
-			pBrush := Gdip_BrushCreateSolid(0xFFAAAAAA)
-			Gdip_FillRoundedRectangle(G, pBrush, 1, 1, this.buttonSize - 2, this.buttonSize - 2, 20)
-			Gdip_DeleteBrush(pBrush)
-			pBrush := Gdip_BrushCreateSolid(0xFF010101)
-			Gdip_FillRoundedRectangle(G, pBrush, 3, 3, this.buttonSize - 6, this.buttonSize - 6, 21)
-			Gdip_DeleteBrush(pBrush)
-			Gdip_SetCompositingMode(G)
-			if (pBitmapIcon) {
-				Gdip_SetSmoothingMode(G, 4)
-				Gdip_SetInterpolationMode(G, 7)
-				Gdip_DrawImage(G, pBitmapIcon, 50, 30, 100, 100)
-				Gdip_DisposeImage(pBitmapIcon)
-			}
-			Gdip_TextToGraphics(G, StrUpper(this.item_pos[grid_index].key), "x12 y12 w26 h26 cffffffff s24 R4")
-			Gdip_TextToGraphics(G, ahko_obj.name, "x5 y140 w190 h48 vCenter Center cffffffff s22 R4", "Microsoft JhengHei")
 
-			gui_pic_show_bitmap(btn, pBitmapBtn, 0, 0, this.buttonSize, this.buttonSize)
-			Gdip_DeleteGraphics(G), Gdip_DisposeImage(pBitmapBtn), DeleteObject(G)
-		}
+		guiobj.callback[ahko_obj.key] := callback
+		btn := this.gui_add_btn(guiobj, ahko_obj,
+			this.item_map[ahko_obj.key].x * (this.buttonSize + this.gmargin),
+			this.item_map[ahko_obj.key].y * (this.buttonSize + this.gmargin) + this.titleHeight + this.gmargin,
+			this.buttonSize, this.buttonSize, ,
+			ahko_obj.name, ahko_obj.key,
+			callback)
 	}
 
 	gui_showat()
@@ -332,7 +337,7 @@ class ahko_gridview_class
 	}
 
 	_subHide() {
-		For , v in this.grid_sub_gui
+		For v in this.grid_sub_gui
 		{
 			if (!v.isHide) {
 				v.uHide()
@@ -365,7 +370,7 @@ class ahko_gridview_class
 						Return
 					}
 				}
-				For , v in this.grid_sub_gui
+				For v in this.grid_sub_gui
 				{
 					if (!v.isHide) {
 						active_count += 1
@@ -383,6 +388,10 @@ class ahko_gridview_class
 			Return cb
 		}
 	}
+}
+
+size_percent(s, percent) {
+	return Round(s * percent / 100)
 }
 
 gui_pic_show_bitmap(GuiCtrlObj, pBitmap, sx := 0, sy := 0, sw := 0, sh := 0)
