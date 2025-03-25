@@ -1,6 +1,6 @@
 FileEncoding("UTF-8")
 appName := "ahko"
-version := "1.0.0"
+version := "1.0.1"
 versionFilename := "version.txt"
 ahkFilename := "app.ahk"
 binaryFilename := "ahko.exe"
@@ -9,7 +9,7 @@ downloadUrl := "/Nigh/ahko/releases/latest/download/"
 update_log := "
 (
 
-1. Add gdip version of gridview
-2. Add picture icon support for gridview
+1. Fix ui type menu
+2. Now click title "ahko" would hide the GUI
 
 )"
