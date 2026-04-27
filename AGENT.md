@@ -46,6 +46,8 @@ This file is the compact project map for coding agents. **Any agent that changes
 npm run check       # Svelte type/a11y check
 npm run build       # static frontend build to build/
 npm run tauri dev   # run app in development
+npm run tauri build # build release app and platform bundles
+cd src-tauri && cargo build --release # compile only the Rust release binary
 ```
 
 ## Development rules for agents

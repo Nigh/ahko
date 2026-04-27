@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    ahko_plus_lib::run()
+    rusto_lib::run()
 }
