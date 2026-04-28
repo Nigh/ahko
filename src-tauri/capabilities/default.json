@@ -2,6 +2,15 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
-  "permissions": ["core:default", "opener:default", "core:window:allow-hide", "core:window:allow-show", "core:window:allow-set-focus"]
+  "windows": ["main", "setup"],
+  "remote": {
+    "urls": ["http://localhost:1420/*", "http://127.0.0.1:1420/*"]
+  },
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "core:window:allow-hide",
+    "core:window:allow-show",
+    "core:window:allow-set-focus"
+  ]
 }
