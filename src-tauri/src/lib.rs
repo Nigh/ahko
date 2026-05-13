@@ -256,8 +256,39 @@ fn load_config() -> Result<AppConfig, String> {
         .map_err(|e| e.to_string())
 }
 
+fn validate_custom_openers(openers: &[CustomOpener]) -> Result<(), String> {
+    for (i, opener) in openers.iter().enumerate() {
+        let label = format!("Custom opener #{}", i + 1);
+        if opener.program.trim().is_empty() {
+            return Err(format!("{label}: program field is empty"));
+        }
+        if opener.program.contains(char::is_whitespace) {
+            return Err(format!(
+                "{label}: program \"{}\" contains whitespace — put arguments in the args field instead",
+                opener.program
+            ));
+        }
+        if opener.extensions.is_empty() {
+            return Err(format!("{label}: no extensions specified"));
+        }
+        for ext in &opener.extensions {
+            if ext.trim().is_empty() {
+                return Err(format!("{label}: extension list contains an empty entry"));
+            }
+            if ext.contains('.') {
+                return Err(format!(
+                    "{label}: extension \"{ext}\" should not contain a dot — write \"{}\" instead",
+                    ext.trim_start_matches('.')
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
 #[tauri::command]
 fn save_config(app: AppHandle, config: AppConfig) -> Result<(), String> {
+    validate_custom_openers(&config.custom_openers)?;
     let dir = config_dir()?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     fs::write(
@@ -296,7 +327,11 @@ fn launch_item(config: AppConfig, path: String) -> Result<(), String> {
         .and_then(|e| e.to_str())
         .map(normalize_ext)
         .unwrap_or_default();
-    if let Some(opener) = config.custom_openers.iter().find(|o| {
+    if cfg!(target_os = "linux")
+        && (ext == "appimage" || p.extension().is_some_and(|e| e.eq_ignore_ascii_case("AppImage")))
+    {
+        spawn_appimage_detached(&p)?;
+    } else if let Some(opener) = config.custom_openers.iter().find(|o| {
         o.extensions
             .iter()
             .map(|e| normalize_ext(e))
@@ -324,10 +359,6 @@ fn launch_item(config: AppConfig, path: String) -> Result<(), String> {
             .current_dir(dir)
             .spawn()
             .map_err(|e| e.to_string())?;
-    } else if cfg!(target_os = "linux")
-        && (ext == "appimage" || p.extension().is_some_and(|e| e.eq_ignore_ascii_case("AppImage")))
-    {
-        spawn_appimage_detached(&p)?;
     } else {
         open::that_detached(&p).map_err(|e| e.to_string())?;
     }

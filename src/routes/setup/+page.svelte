@@ -36,8 +36,12 @@
     config = await invoke("load_config");
   }
   async function save() {
-    await invoke("save_config", { config });
-    message = "Saved";
+    try {
+      await invoke("save_config", { config });
+      message = "Saved";
+    } catch (e) {
+      alert(String(e));
+    }
   }
   function addOpener() {
     config.custom_openers = [...config.custom_openers, { extensions: [], program: "", args: ["{file}"] }];

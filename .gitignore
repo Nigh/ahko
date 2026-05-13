@@ -11,6 +11,7 @@ $RECYCLE.BIN/
 # OS / editor
 .DS_Store
 .vscode
+.kilo
 
 # Node / Svelte / Vite
 node_modules
