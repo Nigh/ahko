@@ -1,14 +1,8 @@
 # ahko
 
-> tested with Autohotkey 2.0.7 on Windows 11
-
 ahko is a quick launcher for windows.
 
 ## Screenshots
-
-### Native Gridview :
-
-![](./assets/screenshot_gridview.png)
 
 ### GDIp Gridview :
 
