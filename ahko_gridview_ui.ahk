@@ -301,7 +301,6 @@ class ahko_gridview_class
 	uShow(*) {
 		if (this.HasOwnProp("father_gui")) {
 			this.father_gui.uShow()
-			; SetTimer(this.gridWaitNotActive, 100)
 		}
 		this.Gui.uHide()
 	}
@@ -325,38 +324,83 @@ class ahko_gridview_class
 	Show() {
 		this.subHide()
 		this.grid_gui.uShow()
-		; SetTimer(this.gridWaitNotActive, 100)
+		this._startMisfireDetection()
 	}
 
-	gridWaitNotActive {
-		get {
-			cb() {
-				active_count := 0
-				if (!this.grid_gui.isHide) {
-					active_count += 1
-					if (!WinActive("ahk_id " this.grid_gui.hwnd)) {
-						this.grid_gui.uHide()
-						SetTimer(this.gridWaitNotActive, 0)
-						Return
-					}
-				}
-				For v in this.grid_sub_gui
-				{
-					if (!v.isHide) {
-						active_count += 1
-						if (!WinActive("ahk_id " v.hwnd)) {
-							v.uHide()
-							SetTimer(this.gridWaitNotActive, 0)
-							Return
-						}
-					}
-				}
-				if (!active_count) {
-					SetTimer(this.gridWaitNotActive, 0)
-				}
-			}
-			Return cb
+	_isAnyVisible() {
+		if (!this.grid_gui.isHide)
+			return true
+		For v in this.grid_sub_gui {
+			if (!v.isHide)
+				return true
 		}
+		return false
+	}
+
+	_isAhkoHwnd(hwnd) {
+		if (hwnd == this.grid_gui.Hwnd)
+			return true
+		For v in this.grid_sub_gui {
+			if (hwnd == v.Hwnd)
+				return true
+		}
+		return false
+	}
+
+	_hideAll() {
+		this._stopMisfireDetection()
+		this._subHide()
+		if (!this.grid_gui.isHide) {
+			this.grid_gui.uHide()
+		}
+	}
+
+	_startMisfireDetection() {
+		this._stopMisfireDetection()
+		this._mouseCheckTimer := ObjBindMethod(this, "_checkMouseClick")
+		SetTimer(this._mouseCheckTimer, 50)
+		this._ih := InputHook("L")
+		this._ih.KeyOpt("{All}", "E")
+		this._ih.OnEnd := ObjBindMethod(this, "_onKeyboardInput")
+		this._ih.Start()
+	}
+
+	_stopMisfireDetection() {
+		if (this._mouseCheckTimer) {
+			SetTimer(this._mouseCheckTimer, 0)
+			this._mouseCheckTimer := ""
+		}
+		if (this._ih) {
+			this._ih.Stop()
+			this._ih := ""
+		}
+	}
+
+	_checkMouseClick() {
+		if (!this._isAnyVisible()) {
+			this._stopMisfireDetection()
+			return
+		}
+		if (DllCall("GetAsyncKeyState", "int", 0x01) & 1) {
+			MouseGetPos(, , &winId)
+			if (!this._isAhkoHwnd(winId)) {
+				this._hideAll()
+			}
+		}
+		if (DllCall("GetAsyncKeyState", "int", 0x02) & 1) {
+			MouseGetPos(, , &winId)
+			if (!this._isAhkoHwnd(winId)) {
+				this._hideAll()
+			}
+		}
+	}
+
+	_onKeyboardInput(ih, vk, sc) {
+		if (!this._isAnyVisible()) {
+			this._stopMisfireDetection()
+			return
+		}
+		this._hideAll()
 	}
 }
 
