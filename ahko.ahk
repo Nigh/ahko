@@ -37,8 +37,6 @@ if (!DirExist(path)) {
 	Return
 }
 
-TrayTip "ahko start at " path, "ahko", 0x14
-
 ahko_keys := ["1", "2", "3", "q", "w", "e", "a", "s", "d", "4", "r", "f", "z", "x", "c", "v"]
 ahko := []
 ahko_init(&ahko, path)
@@ -156,6 +154,8 @@ if (fullscreen_enable)
 	Hotkey hotkeys, ahko_show, "On"
 	Hotif
 }
+
+TrayTip "ahko start at " path, "ahko", 0x14
 
 ; ahko_show()
 ; ahko_setup_show()
