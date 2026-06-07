@@ -79,9 +79,9 @@ app.ahk (entry point)
 | `app.ahk` | Entry point. Bootstraps app, includes all modules, sets up dev hotkeys (F5=exit, F6=reload) |
 | `meta.ahk` | Single source of truth for app name, version, binary filename, download URL, changelog |
 | `ahko.ahk` | Core logic. Reads `setting.ini`, scans watch folder (2 levels, 16 items max per level), builds item array |
-| `ahko_ui.ahk` | Thin dispatcher: initializes grid view class based on `uiType` (1=GDIp, 2=Native) |
-| `ahko_gridview_ui.ahk` | Main UI. Keyboard-driven grid overlay with 16-button layout. Supports GDIp and Native rendering modes |
-| `ahko_setup_gui.ahk` | Settings GUI: UI type, watch folder, hotkey, monitor position, fullscreen toggle, auto-start |
+| `ahko_ui.ahk` | Thin dispatcher: initializes grid view class with GDIp rendering |
+| `ahko_gridview_ui.ahk` | Main UI. Keyboard-driven grid overlay with 16-button layout using GDIp rendering |
+| `ahko_setup_gui.ahk` | Settings GUI: watch folder, hotkey, monitor position, fullscreen toggle, auto-start |
 | `Gdip_All.ahk` | Third-party GDI+ wrapper library for AHK v2 |
 | `isFullScreen.ahk` | Detects fullscreen windows by comparing client rect against monitor bounds |
 | `tray.ahk` | System tray context menu: version, Setup, GitHub, Donate, Reload, Exit |
@@ -92,7 +92,7 @@ app.ahk (entry point)
 
 ### Key Design Patterns
 
-1. **INI-based configuration** - All settings in `setting.ini` (sections: `[dir]`, `[hotkey]`, `[ui]`, `[settings]`, `[update]`)
+1. **INI-based configuration** - All settings in `setting.ini` (sections: `[dir]`, `[hotkey]`, `[settings]`, `[update]`)
 2. **Two-level directory scanning** - Folders become grid categories, files become launchable items
 3. **Keyboard-centric grid UI** - 16 keys (`1,2,3,q,w,e,a,s,d,4,r,f,z,x,c,v`) mapped to staggered grid; backtick goes up, Esc hides
 4. **Custom icon convention** - `_icon.png` for folder icons, `<name>.png` for item icons, `[key]` filename prefix for key assignment
