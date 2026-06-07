@@ -14,17 +14,6 @@ ahko_setup.Add("Text", "x25 y5", "Setup")
 ahko_setup.Add("Text", "x0 y+-66 +BackgroundTrans", "________")
 
 ahko_setup.SetFont(h2FontStyle)
-ahko_setup.Add("Text", "x30 y+20 section", "UI type")
-ahko_setup.SetFont(textFontStyle)
-ahkoSetup_uiType := ahko_setup.Add("DropDownList", item_gap "w" clientWidth, ["GDIp", "Native"])
-ahkoSetup_uiType.OnEvent("Change", uiType_update)
-uiType_update(*) {
-	if (ahkoSetup_uiType.Value > 2) {
-		MsgBox("This ui type is still under development", "OK", "Owner" ahko_setup.Hwnd)
-		ahkoSetup_uiType.Value := 1
-	}
-}
-ahko_setup.SetFont(h2FontStyle)
 ahko_setup.Add("Text", "xs " header_gap, "Watch folder")
 ahko_setup.SetFont(textFontStyle)
 buttonWidth := 95
@@ -145,7 +134,6 @@ hotkeyText_update(*) {
 }
 ahko_setup_show(*) {
 	global
-	ahkoSetup_uiType.Value := uiType
 	ahkoSetup_showAt.Value := ddl_from_showat(showat)
 	ahkoSetup_path.Value := path
 
@@ -179,7 +167,6 @@ ahko_setup_save(*) {
 		IniWrite("path=" ahkoSetup_path.Value, "setting.ini", "dir")
 		IniWrite("key=" hotkeyStr, "setting.ini", "hotkey")
 		IniWrite("fullscreen=" fullscreen_enable, "setting.ini", "hotkey")
-		IniWrite("type=" ahkoSetup_uiType.Value, "setting.ini", "ui")
 		IniWrite("showat=" showat, "setting.ini", "settings")
 		MsgBox("In order for the changes to take effect`nahko is is about to be restarted", "OK", "Owner" ahko_setup.Hwnd)
 		Reload
@@ -188,10 +175,6 @@ ahko_setup_save(*) {
 
 ahko_setup_check(*) {
 	global
-	if (ahkoSetup_uiType.Value < 1 || ahkoSetup_uiType.Value > 2) {
-		MsgBox("Invalid UI type", "Error", "Owner" ahko_setup.Hwnd)
-		Return False
-	}
 	if (!DirExist(ahkoSetup_path.Value)) {
 		MsgBox("Invalid watch folder", "Error", "Owner" ahko_setup.Hwnd)
 		Return False

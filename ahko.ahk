@@ -5,12 +5,6 @@ Persistent
 path := IniRead("setting.ini", "dir", "path", "")
 hotkeys := IniRead("setting.ini", "hotkey", "key", "!q")
 fullscreen_enable := IniRead("setting.ini", "hotkey", "fullscreen", "0")
-uiType_list := "1|2"
-uiType := IniRead("setting.ini", "ui", "type", "1")
-if not RegExMatch(uiType, uiType_list)
-{
-	uiType := "1"
-}
 ; 0 = primary monitor
 ; 1~9 = specific monitor
 ; 10 = monitor the mouse at
@@ -144,18 +138,6 @@ filenameWithoutExt(name)
 {
 	SplitPath(name, , , , &outname)
 	Return outname
-}
-fileGethIcon(file)
-{
-	fileinfo := Buffer(fisize := A_PtrSize + 688)
-	; Get the file's icon.
-	if DllCall("shell32\SHGetFileInfoW", "WStr", file
-		, "UInt", 0, "Ptr", fileinfo, "UInt", fisize, "UInt", 0x100)
-	{
-		hicon := NumGet(fileinfo, 0, "Ptr")
-		Return "HICON:" hicon
-	}
-	Return
 }
 
 isNotFullScreen(*)
