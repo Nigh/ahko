@@ -32,6 +32,7 @@ class ahko_gridview_class
 	item_map := Map()
 	_mouseCheckTimer := ""
 	_ih := ""
+	_skipMisfireCount := 0
 
 	__New() {
 		for k, v in this.item_pos {
@@ -138,6 +139,7 @@ class ahko_gridview_class
 		uShow(*) {
 			g.isHide := False
 			g.Show(this.gui_showat() " NA")
+			this._skipMisfireCount := 2
 		}
 		g.btnCall := []
 		g.isHide := True
@@ -220,6 +222,7 @@ class ahko_gridview_class
 	{
 		callback_maker() {
 			callback(*) {
+				this._skipMisfireCount := 2
 				guiobj.uHide()
 				if (sub_grid != "" && InStr(ahko_obj.attrib, "D")) {
 					sub_grid.uShow()
@@ -382,6 +385,12 @@ class ahko_gridview_class
 	_checkMouseClick() {
 		if (!this._isAnyVisible()) {
 			this._stopMisfireDetection()
+			return
+		}
+		if (this._skipMisfireCount > 0) {
+			this._skipMisfireCount -= 1
+			DllCall("GetAsyncKeyState", "int", 0x01)
+			DllCall("GetAsyncKeyState", "int", 0x02)
 			return
 		}
 		if (DllCall("GetAsyncKeyState", "int", 0x01) & 1) {
