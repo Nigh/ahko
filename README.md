@@ -43,3 +43,4 @@ Created with ahk autoupdate [template](https://github.com/Nigh/ahk-autoupdate-te
 ## Changelog
 
 - Remove Native UI mode, only GDIp rendering is supported.
+- Close ahko window automatically when clicking outside or pressing non-hotkey keys (misfire detection).

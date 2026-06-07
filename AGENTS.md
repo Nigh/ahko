@@ -80,7 +80,7 @@ app.ahk (entry point)
 | `meta.ahk` | Single source of truth for app name, version, binary filename, download URL, changelog |
 | `ahko.ahk` | Core logic. Reads `setting.ini`, scans watch folder (2 levels, 16 items max per level), builds item array |
 | `ahko_ui.ahk` | Thin dispatcher: initializes grid view class with GDIp rendering |
-| `ahko_gridview_ui.ahk` | Main UI. Keyboard-driven grid overlay with 16-button layout using GDIp rendering |
+| `ahko_gridview_ui.ahk` | Main UI. Keyboard-driven grid overlay with 16-button layout using GDIp rendering. Includes misfire detection |
 | `ahko_setup_gui.ahk` | Settings GUI: watch folder, hotkey, monitor position, fullscreen toggle, auto-start |
 | `Gdip_All.ahk` | Third-party GDI+ wrapper library for AHK v2 |
 | `isFullScreen.ahk` | Detects fullscreen windows by comparing client rect against monitor bounds |
@@ -97,6 +97,7 @@ app.ahk (entry point)
 3. **Keyboard-centric grid UI** - 16 keys (`1,2,3,q,w,e,a,s,d,4,r,f,z,x,c,v`) mapped to staggered grid; backtick goes up, Esc hides
 4. **Custom icon convention** - `_icon.png` for folder icons, `<name>.png` for item icons, `[key]` filename prefix for key assignment
 5. **Self-updating** - Checks GitHub releases, downloads zip, uses compiled C binary for file extraction
+6. **Misfire detection** - Timer-based mouse click and InputHook keyboard monitoring; auto-hides ahko window on unrelated input
 6. **Git submodule for toolchain** - `ahk-compile-toolset` bundles compiler and runtime
 
 ---
