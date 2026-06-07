@@ -30,6 +30,8 @@ class ahko_gridview_class
 	gmargin := 10
 	titleHeight := 42
 	item_map := Map()
+	_mouseCheckTimer := ""
+	_ih := ""
 
 	__New() {
 		for k, v in this.item_pos {
@@ -371,6 +373,7 @@ class ahko_gridview_class
 			this._mouseCheckTimer := ""
 		}
 		if (this._ih) {
+			this._ih.OnEnd := ""
 			this._ih.Stop()
 			this._ih := ""
 		}
@@ -395,7 +398,7 @@ class ahko_gridview_class
 		}
 	}
 
-	_onKeyboardInput(ih, vk, sc) {
+	_onKeyboardInput(ih, vk := 0, sc := 0) {
 		if (!this._isAnyVisible()) {
 			this._stopMisfireDetection()
 			return
