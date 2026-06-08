@@ -40,6 +40,9 @@ ahko/
 ├── AGENTS.md                    # This file - agent instructions
 ├── .gitignore                   # Ignores: dist/, *.exe, *.ini, compile_prop.ahk, .vscode/
 ├── .gitmodules                  # Git submodule: ahk-compile-toolset
+├── .github/
+│   └── workflows/
+│       └── release.yml          # CI: auto-release on v* tag push
 ├── assets/                      # Screenshots for README
 │   ├── setup.png
 │   └── setupui.png
@@ -133,6 +136,15 @@ This script:
 
 No formal testing or linting framework is present. The project relies on manual testing.
 
+### CI / Release
+
+Pushing a tag matching `v*` (e.g., `v1.0.3`) triggers the GitHub Actions workflow in `.github/workflows/release.yml`:
+
+1. Checks out the repo with submodules (for `ahk-compile-toolset`)
+2. Builds via `./ahk-compile-toolset/AutoHotkey64.exe ./distribution.ahk`
+3. Creates a GitHub Release with `dist/ahko.zip` and `dist/version.txt`
+4. Auto-generates release notes from commits between tags
+
 ---
 
 ## Coding Conventions
@@ -150,7 +162,7 @@ No formal testing or linting framework is present. The project relies on manual 
 ## Git Information
 
 - **Main branch:** `ahk` (active development)
-- **Other branches:** `main`, `rust` (Tauri rewrite), `web-gui`, `gdip-gui`, `gdip-setup-gui`, `null-callback-fix`
+- **Other branches:** `main`, `rust` (Tauri rewrite), `web-gui`, `gdip-gui`, `gdip-setup-gui`, `null-callback-fix`, `ci/auto-release`
 - **Tags:** `v0.0.1` through `v1.0.3`
 - **Submodule:** `ahk-compile-toolset` from `https://github.com/Nigh/ahk-compile-toolset`
 
