@@ -1,14 +1,8 @@
 # ahko
 
-> tested with Autohotkey 2.0.7 on Windows 11
-
 ahko is a quick launcher for windows.
 
 ## Screenshots
-
-### Native Gridview :
-
-![](./assets/screenshot_gridview.png)
 
 ### GDIp Gridview :
 
@@ -45,3 +39,8 @@ For example, put `abc.lnk` and `abc.png` in the same folder, the icon of `abc.ln
 ## Template
 
 Created with ahk autoupdate [template](https://github.com/Nigh/ahk-autoupdate-template/generate)
+
+## Changelog
+
+- Remove Native UI mode, only GDIp rendering is supported.
+- Close ahko window automatically when clicking outside or pressing non-hotkey keys (misfire detection).

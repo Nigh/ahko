@@ -7,7 +7,6 @@ class ahko_gridview_class
 	grid_opt := "+AlwaysOnTop -DPIScale +Owner +E0x08000000"
 	grid_gui := Gui(this.grid_opt)
 	grid_sub_gui := []
-	use_gdip := 0
 
 	item_pos := Array(
 	{ x: 0, y: 0, key: '1' }, 
@@ -31,12 +30,14 @@ class ahko_gridview_class
 	gmargin := 10
 	titleHeight := 42
 	item_map := Map()
+	_mouseCheckTimer := ""
+	_ih := ""
+	_skipMisfireCount := 0
 
-	__New(gdip := 0) {
+	__New() {
 		for k, v in this.item_pos {
 			this.item_map[v.key] := { idx: k, x: v.x, y: v.y }
 		}
-		this.use_gdip := gdip
 		this.set_gui_default_prop(this.grid_gui)
 		this.grid_gui.size := {
 			w: 5.5 * (this.buttonSize + this.gmargin),
@@ -138,28 +139,18 @@ class ahko_gridview_class
 		uShow(*) {
 			g.isHide := False
 			g.Show(this.gui_showat() " NA")
+			this._skipMisfireCount := 2
 		}
 		g.btnCall := []
 		g.isHide := True
 		g.uShow := uShow
 		g.uHide := uHide
-		if !this.use_gdip {
-			g.SetFont(, "Consolas")
-			g.SetFont(, "Comic Sans MS")
-			g.SetFont(, "Microsoft JhengHei")
-			g.SetFont("s12 w700 cc07070")
-		}
 	}
 
 	set_gui_transparent(g)
 	{
-		if !this.use_gdip {
-			g.BackColor := "FF00FF"
-			WinSetTransColor "FF00FF 0xE0", g.Hwnd
-		} else {
-			g.BackColor := "00FF00"
-			WinSetTransColor "00FF00 220", g.Hwnd
-		}
+		g.BackColor := "00FF00"
+		WinSetTransColor "00FF00 220", g.Hwnd
 		g.Opt("-Caption")
 		g.Show("Hide")
 	}
@@ -180,64 +171,47 @@ class ahko_gridview_class
 
 	gui_add_btn(guiobj, ahko_obj, x, y, w, h, opt := "", name := "", key := "", callback := "")
 	{
-		if (!this.use_gdip) {
-			title := name "`n<&" StrUpper(key) ">"
-			btn := guiobj.add("Button", "x" x " y" y " w" w " h" h " " opt, title)
-			if (IsObject(ahko_obj)) {
-				iconPath := ahko_obj.icon Or fileGethIcon(ahko_obj.path)
-				if (iconPath) {
-					Try {
-						GuiButtonIcon(btn.hwnd, iconPath, , "a2 s100 t16")
-					}
-				}
-			}
-		} else {
-			btn := guiobj.add("Picture", "x" x " y" y " w" w " h" h " 0xE 0x200 -Border",)
+		btn := guiobj.add("Picture", "x" x " y" y " w" w " h" h " 0xE 0x200 -Border",)
 
-			pBitmapBtn := Gdip_CreateBitmap(w, h)
-			local pBitmapIcon := 0
-			if (IsObject(ahko_obj)) {
-				if ahko_obj.icon {
-					pBitmapIcon := Gdip_CreateBitmapFromFile(ahko_obj.icon)
-				} else {
-					fileinfo := Buffer(fisize := A_PtrSize + 688)
-					; Get the file's icon.
-					if DllCall("shell32\SHGetFileInfoW", "WStr", ahko_obj.path
-						, "UInt", 0, "Ptr", fileinfo, "UInt", fisize, "UInt", 0x100)
-					{
-						hicon := NumGet(fileinfo, 0, "Ptr")
-						; GetIconDimensions(hicon, &W, &H)
-						; MsgBox W "," H
-						pBitmapIcon := Gdip_CreateBitmapFromHICON(hicon)
-					}
+		pBitmapBtn := Gdip_CreateBitmap(w, h)
+		local pBitmapIcon := 0
+		if (IsObject(ahko_obj)) {
+			if ahko_obj.icon {
+				pBitmapIcon := Gdip_CreateBitmapFromFile(ahko_obj.icon)
+			} else {
+				fileinfo := Buffer(fisize := A_PtrSize + 688)
+				if DllCall("shell32\SHGetFileInfoW", "WStr", ahko_obj.path
+					, "UInt", 0, "Ptr", fileinfo, "UInt", fisize, "UInt", 0x100)
+				{
+					hicon := NumGet(fileinfo, 0, "Ptr")
+					pBitmapIcon := Gdip_CreateBitmapFromHICON(hicon)
 				}
 			}
-			G := Gdip_GraphicsFromImage(pBitmapBtn)
-			pBrush := Gdip_BrushCreateSolid(0xFFAAAAAA)
-			Gdip_FillRoundedRectangle(G, pBrush, 1, 1, w - 2, h - 2, 16)
-			Gdip_DeleteBrush(pBrush)
-			pBrush := Gdip_BrushCreateSolid(0xFF010101)
-			Gdip_FillRoundedRectangle(G, pBrush, 3, 3, w - 6, h - 6, 16)
-			Gdip_DeleteBrush(pBrush)
-			Gdip_SetCompositingMode(G)
-			if (pBitmapIcon) {
-				Gdip_SetSmoothingMode(G, 4)
-				Gdip_SetInterpolationMode(G, 7)
-				Gdip_DrawImage(G, pBitmapIcon, 50, 30, 100, 100)
-				Gdip_DisposeImage(pBitmapIcon)
-			}
-			if (IsObject(ahko_obj)) {
-				xy := size_percent(this.buttonSize, 6)
-				wh := size_percent(this.buttonSize, 13)
-				; this.titleHeight,
-				Gdip_TextToGraphics(G, StrUpper(key), "x" xy " y" xy " w" wh " h" wh " cffffffff s" size_percent(this.buttonSize, 12) " R4")
-				Gdip_TextToGraphics(G, name, "x" size_percent(this.buttonSize, 2.5) " y" size_percent(this.buttonSize, 70) " w" size_percent(this.buttonSize, 95) " h" size_percent(this.buttonSize, 24) " vCenter Center cffffffff s" size_percent(this.buttonSize, 11) " R4", "Microsoft JhengHei")
-			} else {
-				Gdip_TextToGraphics(G, name, "x" size_percent(this.buttonSize, 2) " y" size_percent(this.buttonSize, 2) " w" size_percent(this.buttonSize, 96) " h" size_percent(this.titleHeight, 96) " vCenter Center cffffffff s" size_percent(this.buttonSize, 11) " R4", "Microsoft JhengHei")
-			}
-			gui_pic_show_bitmap(btn, pBitmapBtn, 0, 0, w, h)
-			Gdip_DeleteGraphics(G), Gdip_DisposeImage(pBitmapBtn), DeleteObject(G)
 		}
+		G := Gdip_GraphicsFromImage(pBitmapBtn)
+		pBrush := Gdip_BrushCreateSolid(0xFFAAAAAA)
+		Gdip_FillRoundedRectangle(G, pBrush, 1, 1, w - 2, h - 2, 16)
+		Gdip_DeleteBrush(pBrush)
+		pBrush := Gdip_BrushCreateSolid(0xFF010101)
+		Gdip_FillRoundedRectangle(G, pBrush, 3, 3, w - 6, h - 6, 16)
+		Gdip_DeleteBrush(pBrush)
+		Gdip_SetCompositingMode(G)
+		if (pBitmapIcon) {
+			Gdip_SetSmoothingMode(G, 4)
+			Gdip_SetInterpolationMode(G, 7)
+			Gdip_DrawImage(G, pBitmapIcon, 50, 30, 100, 100)
+			Gdip_DisposeImage(pBitmapIcon)
+		}
+		if (IsObject(ahko_obj)) {
+			xy := size_percent(this.buttonSize, 6)
+			wh := size_percent(this.buttonSize, 13)
+			Gdip_TextToGraphics(G, StrUpper(key), "x" xy " y" xy " w" wh " h" wh " cffffffff s" size_percent(this.buttonSize, 12) " R4")
+			Gdip_TextToGraphics(G, name, "x" size_percent(this.buttonSize, 2.5) " y" size_percent(this.buttonSize, 70) " w" size_percent(this.buttonSize, 95) " h" size_percent(this.buttonSize, 24) " vCenter Center cffffffff s" size_percent(this.buttonSize, 11) " R4", "Microsoft JhengHei")
+		} else {
+			Gdip_TextToGraphics(G, name, "x" size_percent(this.buttonSize, 2) " y" size_percent(this.buttonSize, 2) " w" size_percent(this.buttonSize, 96) " h" size_percent(this.titleHeight, 96) " vCenter Center cffffffff s" size_percent(this.buttonSize, 11) " R4", "Microsoft JhengHei")
+		}
+		gui_pic_show_bitmap(btn, pBitmapBtn, 0, 0, w, h)
+		Gdip_DeleteGraphics(G), Gdip_DisposeImage(pBitmapBtn), DeleteObject(G)
 		if (callback) {
 			btn.OnEvent("Click", callback)
 		}
@@ -248,6 +222,7 @@ class ahko_gridview_class
 	{
 		callback_maker() {
 			callback(*) {
+				this._skipMisfireCount := 2
 				guiobj.uHide()
 				if (sub_grid != "" && InStr(ahko_obj.attrib, "D")) {
 					sub_grid.uShow()
@@ -331,7 +306,6 @@ class ahko_gridview_class
 	uShow(*) {
 		if (this.HasOwnProp("father_gui")) {
 			this.father_gui.uShow()
-			; SetTimer(this.gridWaitNotActive, 100)
 		}
 		this.Gui.uHide()
 	}
@@ -355,38 +329,90 @@ class ahko_gridview_class
 	Show() {
 		this.subHide()
 		this.grid_gui.uShow()
-		; SetTimer(this.gridWaitNotActive, 100)
+		this._startMisfireDetection()
 	}
 
-	gridWaitNotActive {
-		get {
-			cb() {
-				active_count := 0
-				if (!this.grid_gui.isHide) {
-					active_count += 1
-					if (!WinActive("ahk_id " this.grid_gui.hwnd)) {
-						this.grid_gui.uHide()
-						SetTimer(this.gridWaitNotActive, 0)
-						Return
-					}
-				}
-				For v in this.grid_sub_gui
-				{
-					if (!v.isHide) {
-						active_count += 1
-						if (!WinActive("ahk_id " v.hwnd)) {
-							v.uHide()
-							SetTimer(this.gridWaitNotActive, 0)
-							Return
-						}
-					}
-				}
-				if (!active_count) {
-					SetTimer(this.gridWaitNotActive, 0)
-				}
-			}
-			Return cb
+	_isAnyVisible() {
+		if (!this.grid_gui.isHide)
+			return true
+		For v in this.grid_sub_gui {
+			if (!v.isHide)
+				return true
 		}
+		return false
+	}
+
+	_isAhkoHwnd(hwnd) {
+		if (hwnd == this.grid_gui.Hwnd)
+			return true
+		For v in this.grid_sub_gui {
+			if (hwnd == v.Hwnd)
+				return true
+		}
+		return false
+	}
+
+	_hideAll() {
+		this._stopMisfireDetection()
+		this._subHide()
+		if (!this.grid_gui.isHide) {
+			this.grid_gui.uHide()
+		}
+	}
+
+	_startMisfireDetection() {
+		this._stopMisfireDetection()
+		this._mouseCheckTimer := ObjBindMethod(this, "_checkMouseClick")
+		SetTimer(this._mouseCheckTimer, 50)
+		this._ih := InputHook("L")
+		this._ih.KeyOpt("{All}", "E")
+		this._ih.OnEnd := ObjBindMethod(this, "_onKeyboardInput")
+		this._ih.Start()
+	}
+
+	_stopMisfireDetection() {
+		if (this._mouseCheckTimer) {
+			SetTimer(this._mouseCheckTimer, 0)
+			this._mouseCheckTimer := ""
+		}
+		if (this._ih) {
+			this._ih.OnEnd := ""
+			this._ih.Stop()
+			this._ih := ""
+		}
+	}
+
+	_checkMouseClick() {
+		if (!this._isAnyVisible()) {
+			this._stopMisfireDetection()
+			return
+		}
+		if (this._skipMisfireCount > 0) {
+			this._skipMisfireCount -= 1
+			DllCall("GetAsyncKeyState", "int", 0x01)
+			DllCall("GetAsyncKeyState", "int", 0x02)
+			return
+		}
+		if (DllCall("GetAsyncKeyState", "int", 0x01) & 1) {
+			MouseGetPos(, , &winId)
+			if (!this._isAhkoHwnd(winId)) {
+				this._hideAll()
+			}
+		}
+		if (DllCall("GetAsyncKeyState", "int", 0x02) & 1) {
+			MouseGetPos(, , &winId)
+			if (!this._isAhkoHwnd(winId)) {
+				this._hideAll()
+			}
+		}
+	}
+
+	_onKeyboardInput(ih, vk := 0, sc := 0) {
+		if (!this._isAnyVisible()) {
+			this._stopMisfireDetection()
+			return
+		}
+		this._hideAll()
 	}
 }
 
@@ -420,64 +446,4 @@ gui_pic_show_bitmap(GuiCtrlObj, pBitmap, sx := 0, sy := 0, sw := 0, sh := 0)
 	hBitmapShow := Gdip_CreateHBITMAPFromBitmap(pBitmapShow)
 	SetImage(GuiCtrlObj.hwnd, hBitmapShow)
 	Gdip_DeleteGraphics(G), Gdip_DisposeImage(pBitmapShow), DeleteObject(hBitmapShow)
-}
-
-;{ GuiButtonIcon
-; Fanatic Guru
-; 2014 05 31
-; Version 2.0
-;
-; FUNCTION to Assign an Icon to a Gui Button
-;
-;------------------------------------------------
-;
-; Method:
-;   GuiButtonIcon(Handle, File, Options)
-;
-;   Parameters:
-;   1) {Handle} 	HWND handle of Gui button
-;   2) {File} 		File containing icon image
-;   3) {Index} 		Index of icon in file
-;						Optional: Default = 1
-;   4) {Options}	Single letter flag followed by a number with multiple options delimited by a space
-;						W = Width of Icon (default = 16)
-;						H = Height of Icon (default = 16)
-;						S = Size of Icon, Makes Width and Height both equal to Size
-;						L = Left Margin
-;						T = Top Margin
-;						R = Right Margin
-;						B = Botton Margin
-;						A = Alignment (0 = left, 1 = right, 2 = top, 3 = bottom, 4 = center; default = 4)
-;
-; Return:
-;   1 = icon found, 0 = icon not found
-;
-; Example:
-; Gui, Add, Button, w70 h38 hwndIcon, Save
-; GuiButtonIcon(Icon, "shell32.dll", 259, "s30 a1 r2")
-; Gui, Show
-;
-GuiButtonIcon(Handle, File, Index := 1, Options := "")
-{
-	RegExMatch(Options, "i)w\K\d+", &W) ? W := W[] : W := 16
-	RegExMatch(Options, "i)h\K\d+", &H) ? (H := H[]) : H := 16
-	RegExMatch(Options, "i)s\K\d+", &S) ? W := H := S[] : (0)
-	RegExMatch(Options, "i)l\K\d+", &L) ? (L := L[]) : L := 0
-	RegExMatch(Options, "i)t\K\d+", &T) ? (T := T[]) : T := 0
-	RegExMatch(Options, "i)r\K\d+", &R) ? (R := R[]) : R := 0
-	RegExMatch(Options, "i)b\K\d+", &B) ? (B := B[]) : B := 0
-	RegExMatch(Options, "i)a\K\d+", &A) ? (A := A[]) : A := 4
-	Psz := A_PtrSize = "" ? 4 : A_PtrSize
-	DW := "UInt"
-	Ptr := A_PtrSize = "" ? DW : "Ptr"
-	button_il_Buffer := Buffer(20 + Psz, 0)
-	normal_il := DllCall("ImageList_Create", DW, W, DW, H, DW, 0x21, DW, 1, DW, 1)
-	NumPut(Ptr, normal_il, button_il_Buffer, 0)	; Width & Height
-	NumPut(DW, L, button_il_Buffer, 0 + Psz)		; Left Margin
-	NumPut(DW, T, button_il_Buffer, 4 + Psz)		; Top Margin
-	NumPut(DW, R, button_il_Buffer, 8 + Psz)		; Right Margin
-	NumPut(DW, B, button_il_Buffer, 12 + Psz)	; Bottom Margin
-	NumPut(DW, A, button_il_Buffer, 16 + Psz)	; Alignment
-	SendMessage(BCM_SETIMAGELIST := 5634, 0, button_il_Buffer.Ptr, , "ahk_id " Handle)
-	return IL_Add(normal_il, File, Index)
 }

@@ -5,12 +5,6 @@ Persistent
 path := IniRead("setting.ini", "dir", "path", "")
 hotkeys := IniRead("setting.ini", "hotkey", "key", "!q")
 fullscreen_enable := IniRead("setting.ini", "hotkey", "fullscreen", "0")
-uiType_list := "1|2"
-uiType := IniRead("setting.ini", "ui", "type", "1")
-if not RegExMatch(uiType, uiType_list)
-{
-	uiType := "1"
-}
 ; 0 = primary monitor
 ; 1~9 = specific monitor
 ; 10 = monitor the mouse at
@@ -42,8 +36,6 @@ if (!DirExist(path)) {
 	ahko_setup_show()
 	Return
 }
-
-TrayTip "ahko start at " path, "ahko", 0x14
 
 ahko_keys := ["1", "2", "3", "q", "w", "e", "a", "s", "d", "4", "r", "f", "z", "x", "c", "v"]
 ahko := []
@@ -145,18 +137,6 @@ filenameWithoutExt(name)
 	SplitPath(name, , , , &outname)
 	Return outname
 }
-fileGethIcon(file)
-{
-	fileinfo := Buffer(fisize := A_PtrSize + 688)
-	; Get the file's icon.
-	if DllCall("shell32\SHGetFileInfoW", "WStr", file
-		, "UInt", 0, "Ptr", fileinfo, "UInt", fisize, "UInt", 0x100)
-	{
-		hicon := NumGet(fileinfo, 0, "Ptr")
-		Return "HICON:" hicon
-	}
-	Return
-}
 
 isNotFullScreen(*)
 {
@@ -174,6 +154,8 @@ if (fullscreen_enable)
 	Hotkey hotkeys, ahko_show, "On"
 	Hotif
 }
+
+TrayTip "ahko start at " path, "ahko", 0x14
 
 ; ahko_show()
 ; ahko_setup_show()
