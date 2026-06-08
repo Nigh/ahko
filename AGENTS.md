@@ -81,7 +81,7 @@ app.ahk (entry point)
 | `ahko.ahk` | Core logic. Reads `setting.ini`, scans watch folder (2 levels, 16 items max per level), builds item array |
 | `ahko_ui.ahk` | Thin dispatcher: initializes grid view class with GDIp rendering |
 | `ahko_gridview_ui.ahk` | Main UI. Keyboard-driven grid overlay with 16-button layout using GDIp rendering. Includes misfire detection |
-| `ahko_setup_gui.ahk` | Settings GUI: watch folder, hotkey, monitor position, fullscreen toggle, auto-start |
+| `ahko_setup_gui.ahk` | Settings GUI: borderless window with GDIp-rendered header, buttons, and section labels. Uses native controls for inputs. Watch folder, hotkey, monitor position, fullscreen toggle, auto-start. Timer-based hover detection via `SetTimer` + `GetCursorPos` polling (30ms) |
 | `Gdip_All.ahk` | Third-party GDI+ wrapper library for AHK v2 |
 | `isFullScreen.ahk` | Detects fullscreen windows by comparing client rect against monitor bounds |
 | `tray.ahk` | System tray context menu: version, Setup, GitHub, Donate, Reload, Exit |
@@ -98,7 +98,8 @@ app.ahk (entry point)
 4. **Custom icon convention** - `_icon.png` for folder icons, `<name>.png` for item icons, `[key]` filename prefix for key assignment
 5. **Self-updating** - Checks GitHub releases, downloads zip, uses compiled C binary for file extraction
 6. **Misfire detection** - Timer-based mouse click and InputHook keyboard monitoring; auto-hides ahko window on unrelated input
-6. **Git submodule for toolchain** - `ahk-compile-toolset` bundles compiler and runtime
+7. **GDIp setup GUI** - Borderless setup window with GDIp-rendered header (dark title bar, rounded close button), GDIp-drawn buttons (Save, Cancel, Select), and native controls for text inputs. Draggable via WM_NCLBUTTONDOWN on header area
+8. **Git submodule for toolchain** - `ahk-compile-toolset` bundles compiler and runtime
 
 ---
 
@@ -149,7 +150,7 @@ No formal testing or linting framework is present. The project relies on manual 
 ## Git Information
 
 - **Main branch:** `ahk` (active development)
-- **Other branches:** `main`, `rust` (Tauri rewrite), `web-gui`, `gdip-gui`, `null-callback-fix`
+- **Other branches:** `main`, `rust` (Tauri rewrite), `web-gui`, `gdip-gui`, `gdip-setup-gui`, `null-callback-fix`
 - **Tags:** `v0.0.1` through `v1.0.3`
 - **Submodule:** `ahk-compile-toolset` from `https://github.com/Nigh/ahk-compile-toolset`
 
