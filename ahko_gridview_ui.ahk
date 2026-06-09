@@ -52,6 +52,20 @@ class ahko_gridview_class
 			"left",
 			" ahko", "", this.grid_gui.uHide)
 
+		if (isUacMode) {
+			moreBtnX := 1 * (this.buttonSize + this.gmargin)
+			moreBtnCallback(*) {
+				A_TrayMenu.Show()
+			}
+			this.gui_add_btn(this.grid_gui, "",
+				moreBtnX,
+				1,
+				this.buttonSize,
+				this.titleHeight,
+				"left",
+				"More", "", moreBtnCallback)
+		}
+
 		For layer0 in ahko
 		{
 			if (InStr(layer0.attrib, "D")) {

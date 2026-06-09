@@ -316,18 +316,17 @@ showAt_update(*) {
 
 ahko_setup_show(*) {
 	global
+	if (IsSet(ahko_gridview) && !ahko_gridview.grid_gui.isHide) {
+		ahko_gridview._hideAll()
+	}
 	ahkoSetup_showAt.Value := ddl_from_showat(showat)
 	ahkoSetup_path.Value := path
 	ahkoSetup_hotkey.Value := RegExReplace(hotkeys, "#")
 	ahkoSetup_hotkeyWin.Value := RegExMatch(hotkeys, "#")
 	hotkeyText_update()
-	local autostart := RegRead("HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run", "ahko", "")
+	local autostart := (RunWait('schtasks /query /tn "ahko"', , "Hide") == 0)
 	ahkoSetup_enable_fullscreen.Value := fullscreen_enable
-	if (autostart != "") {
-		ahkoSetup_autoStart.Value := 1
-	} else {
-		ahkoSetup_autoStart.Value := 0
-	}
+	ahkoSetup_autoStart.Value := autostart ? 1 : 0
 	setup_hoverState := hover_none
 	setup_renderBg()
 	setup_renderButtons()
