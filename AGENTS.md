@@ -141,10 +141,11 @@ No formal testing or linting framework is present. The project relies on manual 
 
 Pushing a tag matching `v*` (e.g., `v1.0.3`) triggers the GitHub Actions workflow in `.github/workflows/release.yml`:
 
-1. Checks out the repo with submodules (for `ahk-compile-toolset`)
-2. Builds via `./ahk-compile-toolset/AutoHotkey64.exe ./distribution.ahk`
-3. Creates a GitHub Release with `dist/ahko.zip` and `dist/version.txt`
-4. Auto-generates release notes from commits between tags
+1. Checks out the repo with submodules (for `ahk-compile-toolset`) with full history (`fetch-depth: 0`)
+2. **Auto-injects version and update_log** into `meta.ahk` via PowerShell: extracts version from tag name (e.g., `v1.0.3` → `1.0.3`) and generates `update_log` from `git log` between previous and current tags
+3. Builds via `./ahk-compile-toolset/AutoHotkey64.exe ./distribution.ahk`
+4. Creates a GitHub Release with `dist/ahko.zip` and `dist/version.txt`
+5. Auto-generates release notes from commits between tags
 
 ---
 
