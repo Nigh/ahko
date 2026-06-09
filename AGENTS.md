@@ -32,7 +32,7 @@ ahko/
 ├── updater.c                    # C source for updater binary (extracts zip, launches exe)
 ├── updater.h                    # C header for updater (filename defines)
 ├── distribution.ahk             # Build/distribution script (compile + package)
-├── set_auto_run.ahk             # Windows startup registry helper
+├── set_auto_run.ahk             # Windows startup helper (Task Scheduler, admin, no UAC)
 ├── icon.ico                     # Application icon (ICO)
 ├── icon.png                     # Application icon (PNG)
 ├── LICENSE                      # MIT license
@@ -81,9 +81,9 @@ app.ahk (entry point)
 |--------|----------------|
 | `app.ahk` | Entry point. Bootstraps app, includes all modules, sets up dev hotkeys (F5=exit, F6=reload) |
 | `meta.ahk` | Single source of truth for app name, version, binary filename, download URL, changelog |
-| `ahko.ahk` | Core logic. Reads `setting.ini`, scans watch folder (2 levels, 16 items max per level), builds item array |
+| `ahko.ahk` | Core logic. Reads `setting.ini`, scans watch folder (2 levels, 16 items max per level), builds item array. Detects UAC mode (`A_IsAdmin`), provides `ahko_invoke` wrapper that falls back to setup GUI when grid is empty in UAC mode |
 | `ahko_ui.ahk` | Thin dispatcher: initializes grid view class with GDIp rendering |
-| `ahko_gridview_ui.ahk` | Main UI. Keyboard-driven grid overlay with 16-button layout using GDIp rendering. Includes misfire detection |
+| `ahko_gridview_ui.ahk` | Main UI. Keyboard-driven grid overlay with 16-button layout using GDIp rendering. Includes misfire detection. In UAC mode, title bar includes a "More" button that shows `A_TrayMenu` as a popup context menu |
 | `ahko_setup_gui.ahk` | Settings GUI: borderless window with GDIp-rendered header, buttons, and section labels. Uses native controls for inputs. Watch folder, hotkey, monitor position, fullscreen toggle, auto-start. Timer-based hover detection via `SetTimer` + `GetCursorPos` polling (30ms) |
 | `Gdip_All.ahk` | Third-party GDI+ wrapper library for AHK v2 |
 | `isFullScreen.ahk` | Detects fullscreen windows by comparing client rect against monitor bounds |
@@ -91,7 +91,7 @@ app.ahk (entry point)
 | `update.ahk` | Auto-update via GitHub releases API with mirror support |
 | `updater.c` / `updater.h` | C program compiled via TCC; extracts downloaded zip and restarts app |
 | `distribution.ahk` | Build script: compiles updater.c, compiles AHK to exe, creates zip in `dist/` |
-| `set_auto_run.ahk` | Adds/removes app from Windows startup registry |
+| `set_auto_run.ahk` | Adds/removes app from Windows startup via Task Scheduler (`schtasks`) with admin privileges and no UAC prompt |
 
 ### Key Design Patterns
 
@@ -103,6 +103,7 @@ app.ahk (entry point)
 6. **Misfire detection** - Timer-based mouse click and InputHook keyboard monitoring; auto-hides ahko window on unrelated input
 7. **GDIp setup GUI** - Borderless setup window with GDIp-rendered header (dark title bar, rounded close button), GDIp-drawn buttons (Save, Cancel, Select), and native controls for text inputs. Draggable via WM_NCLBUTTONDOWN on header area
 8. **Git submodule for toolchain** - `ahk-compile-toolset` bundles compiler and runtime
+9. **UAC mode fallback** - When running elevated (`A_IsAdmin`), system tray is invisible (Session 0). Grid title bar gets a "More" button to access tray menu as a popup. Empty grid in UAC mode auto-opens setup GUI instead
 
 ---
 
