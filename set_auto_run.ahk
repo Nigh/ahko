@@ -31,9 +31,9 @@ if not remove {
 UAC(args)
 
 if remove {
-	RegDelete("HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run",name)
+	RunWait('schtasks /delete /tn "' name '" /f', , "Hide")
 } else {
-	RegWrite(target,"REG_SZ","HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run",name)
+	RunWait('schtasks /create /tn "' name '" /tr ' target ' /sc onlogon /rl highest /f', , "Hide")
 }
 ExitApp 0
 
