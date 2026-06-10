@@ -36,6 +36,14 @@ Folder icons can be set by placing a png image with the name `_icon.png` in the 
 Item's icon can be set by placing a png image with the same name as the item.  
 For example, put `abc.lnk` and `abc.png` in the same folder, the icon of `abc.lnk` would be set to `abc.png`.
 
+## Auto Start & Tray Menu
+
+ahko uses Windows Task Scheduler to enable auto-start at login with administrator privileges. This ensures ahko can properly interact with other windows that are running as administrator.
+
+> **Note:** When running with administrator privileges via auto-start, the system tray icon may not be visible. This is a known side effect of the current auto-start method.
+
+To access the tray menu when the tray icon is not available, click the **"More"** button in the ahko grid view title bar. This will display the same context menu that would normally appear when right-clicking the tray icon, including options such as Setup, GitHub, Donate, Reload, and Exit.
+
 ## Template
 
 Created with ahk autoupdate [template](https://github.com/Nigh/ahk-autoupdate-template/generate)
