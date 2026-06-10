@@ -102,8 +102,8 @@ app.ahk (entry point)
 5. **Self-updating** - Checks GitHub releases, downloads zip, uses compiled C binary for file extraction
 6. **Misfire detection** - Timer-based mouse click and InputHook keyboard monitoring; auto-hides ahko window on unrelated input
 7. **GDIp setup GUI** - Borderless setup window with GDIp-rendered header (dark title bar, rounded close button), GDIp-drawn buttons (Save, Cancel, Select), and native controls for text inputs. Draggable via WM_NCLBUTTONDOWN on header area
-8. **Git submodule for toolchain** - `ahk-compile-toolset` bundles compiler and runtime
-9. **UAC mode fallback** - When running elevated (`A_IsAdmin`), system tray is invisible (Session 0). Grid title bar gets a "More" button to access tray menu as a popup. Empty grid in UAC mode auto-opens setup GUI instead
+8. **UAC mode fallback** - When running elevated (`A_IsAdmin`), system tray is invisible (Session 0). Grid title bar gets a "More" button to access tray menu as a popup. Empty grid in UAC mode auto-opens setup GUI instead
+9. **Git submodule for toolchain** - `ahk-compile-toolset` bundles compiler and runtime
 
 ---
 
