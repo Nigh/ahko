@@ -144,14 +144,25 @@ isNotFullScreen(*)
 }
 
 #Include ahko_ui.ahk
+isUacMode := A_IsAdmin
 ahko_ui_init()
+
+ahko_invoke(*) {
+	global
+	if (isUacMode && ahko.Length == 0) {
+		ahko_setup_show()
+	} else {
+		ahko_show()
+	}
+}
+
 ; TODO: if hotkey invalid, then reset the hotkey to default
 if (fullscreen_enable)
 {
-	Hotkey hotkeys, ahko_show, "On"
+	Hotkey hotkeys, ahko_invoke, "On"
 } else {
 	Hotif isNotFullScreen
-	Hotkey hotkeys, ahko_show, "On"
+	Hotkey hotkeys, ahko_invoke, "On"
 	Hotif
 }
 
