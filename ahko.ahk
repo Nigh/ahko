@@ -17,7 +17,7 @@ if not RegExMatch(showat, showat_list)
 }
 
 #include isFullScreen.ahk
-#include ahko_setup_gui.ahk
+#include setup/ahko_setup_gui.ahk
 
 customTrayMenu := { valid: true }
 customTrayMenu.menu := []
