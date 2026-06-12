@@ -18,4 +18,5 @@ dist/
 
 *.exe
 *.ini
+!themes.ini
 compile_prop.ahk
