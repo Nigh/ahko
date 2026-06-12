@@ -1,33 +1,35 @@
 ﻿#include meta.ahk
 
-if FileExist("updater.exe") {
-	FileDelete("updater.exe")
-}
-if !FileExist("setting.ini") {
-	IniWrite(version, "setting.ini", "update", "ver")
-}
-lastUpdate := IniRead("setting.ini", "update", "last", 0)
-autoUpdate := IniRead("setting.ini", "update", "autoupdate", 1)
-updateMirror := IniRead("setting.ini", "update", "mirror", 1)
-IniWrite(updateMirror, "setting.ini", "update", "mirror")
-mirrorList := [
-	"https://github.com",
-	"https://mirror.ghproxy.com/https://github.com",
-]
-updatemirrorTried := Array()
-today := A_MM . A_DD
-if (autoUpdate) {
-	if (lastUpdate != today) {
-		get_latest_version()
-	} else {
-		version_str := IniRead("setting.ini", "update", "ver", "0")
-		if (version_str != version) {
-			IniWrite(version, "setting.ini", "update", "ver")
-			MsgBox(version . "`nUpdate log`n`n" . update_log)
-		}
+if A_IsCompiled {
+	if FileExist("updater.exe") {
+		FileDelete("updater.exe")
 	}
-} else {
-	TrayTip "Update Skiped`n`nCurrent version`nv" version, "Update", 1
+	if !FileExist("setting.ini") {
+		IniWrite(version, "setting.ini", "update", "ver")
+	}
+	lastUpdate := IniRead("setting.ini", "update", "last", 0)
+	autoUpdate := IniRead("setting.ini", "update", "autoupdate", 1)
+	updateMirror := IniRead("setting.ini", "update", "mirror", 1)
+	IniWrite(updateMirror, "setting.ini", "update", "mirror")
+	mirrorList := [
+		"https://github.com",
+		"https://mirror.ghproxy.com/https://github.com",
+	]
+	updatemirrorTried := Array()
+	today := A_MM . A_DD
+	if (autoUpdate) {
+		if (lastUpdate != today) {
+			get_latest_version()
+		} else {
+			version_str := IniRead("setting.ini", "update", "ver", "0")
+			if (version_str != version) {
+				IniWrite(version, "setting.ini", "update", "ver")
+				MsgBox(version . "`nUpdate log`n`n" . update_log)
+			}
+		}
+	} else {
+		TrayTip "Update Skiped`n`nCurrent version`nv" version, "Update", 1
+	}
 }
 
 updateTimeout(*)
