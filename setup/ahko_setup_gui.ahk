@@ -1,5 +1,5 @@
 #Requires AutoHotkey v2.0
-
+#Warn Unreachable, Off
 #Include "../lib/ahk-xaml/XAML_GUI.ahk"
 #Include "../lib/ahk-xaml/AXML.ahk"
 #Include "../lib/ahk-xaml/XAML_Components.ahk"
@@ -40,7 +40,7 @@ setup_init() {
 		"MinMaxButtons", false,
 		"Resize", false,
 		"Width", 420,
-		"Height", 580,
+		"Height", 530,
 		"TitleBarHeight", 40,
 		"CloseAction", ahko_setup_cancel
 	)
@@ -57,7 +57,9 @@ setup_init() {
 	setupUi := setupApp.Compile()
 	AXML.BindAll(setupUi, result, SetupAppState)
 
-	setupApp.RegisterHotKeyChange(setupApp.X.Find("TxtHotkey"), setup_hotkey_changed)
+	txtHotkey := setupApp.X.Find("TxtHotkey")
+	txtHotkey._Props["Name"] := txtHotkey._Props["x:Name"]
+	setupApp.RegisterHotKeyChange(txtHotkey, setup_hotkey_changed)
 	setupUi.OnEvent("BtnClose", "Click", ahko_setup_cancel)
 	for ctrlName in ["TxtPath", "TxtHotkey", "ChkHotkeyWin", "CmbShowAt", "ChkFullscreen", "ChkAutoStart"] {
 		setupUi.Track(ctrlName)
@@ -146,10 +148,10 @@ setup_path(*) {
 
 hotkeyText_update(state?, ctrl?, event?) {
 	global SetupAppState, setupUi
-	if (IsObject(state) && state.Has("ChkHotkeyWin")) {
+	if (IsSet(state) && IsObject(state) && state.Has("ChkHotkeyWin")) {
 		SetupAppState.HotkeyWin := state["ChkHotkeyWin"]
 	}
-	if (IsObject(state) && state.Has("TxtHotkey")) {
+	if (IsSet(state) && IsObject(state) && state.Has("TxtHotkey")) {
 		SetupAppState.Hotkey := state["TxtHotkey"]
 	}
 	local hotkey_str := ""
@@ -214,9 +216,11 @@ showat_monitor(n) {
 }
 
 showAt_update(state?, ctrl?, event?) {
-	global showat, SetupAppState
-	if (IsObject(state) && state.Has("CmbShowAt")) {
-		SetupAppState.ShowAtIndex := state["CmbShowAt"]
+	global showat, SetupAppState, setupUi
+	if (setupUi) {
+		local idxVal := setupUi.Query("CmbShowAt>SelectedIndex")
+		if (idxVal != "")
+			SetupAppState.ShowAtIndex := idxVal
 	}
 	local ddlValue := Integer(SetupAppState.ShowAtIndex) + 1
 	if (ddlValue >= 4) {
@@ -232,6 +236,7 @@ ahko_setup_show(*) {
 	if (IsSet(ahko_gridview) && !ahko_gridview.grid_gui.isHide) {
 		ahko_gridview._hideAll()
 	}
+	Hotkey hotkeys, "Off"
 	setup_init()
 	setup_sync_state_from_config()
 	setup_push_state_to_ui()
@@ -243,9 +248,16 @@ ahko_setup_show(*) {
 }
 
 ahko_setup_cancel(*) {
-	global setupUi
+	global setupUi, hotkeys, fullscreen_enable
 	if (setupUi && setupUi.wpfHwnd) {
 		WinHide("ahk_id " setupUi.wpfHwnd)
+	}
+	if (fullscreen_enable) {
+		Hotkey hotkeys, ahko_invoke, "On"
+	} else {
+		HotIf isNotFullScreen
+		Hotkey hotkeys, ahko_invoke, "On"
+		HotIf
 	}
 }
 

@@ -1,7 +1,7 @@
 @Template SectionLabel:
   TextBlock:
     Text: "{{Title}}"
-    FontSize: 11
+    FontSize: 26
     FontWeight: Bold
     Foreground: "{DynamicResource TextSub}"
     Margin: "0,0,0,8"
@@ -54,18 +54,21 @@ ScrollViewer:
         IsChecked: $HotkeyWin
         OnClick: hotkeyText_update
 
-    TextBlock (TxtHotkeyHint):
-      Text: Hotkey is
-      FontSize: 10
-      Foreground: "{DynamicResource TextSub}"
-      Margin: "0,0,0,0"
-
-    TextBlock (TxtHotkeyText):
-      Text: $HotkeyText
-      FontSize: 13
-      FontWeight: Bold
-      Foreground: "{DynamicResource Accent}"
+    StackPanel:
+      Orientation: Horizontal
       Margin: "0,2,0,0"
+      TextBlock (TxtHotkeyHint):
+        Text: Hotkey is
+        FontSize: 13
+        VerticalAlignment: Bottom
+        Margin: "0,0,4,0"
+
+      TextBlock (TxtHotkeyText):
+        Text: $HotkeyText
+        FontSize: 18
+        FontWeight: Bold
+        Foreground: "{DynamicResource Accent}"
+        VerticalAlignment: Bottom
 
     SectionLabel (LblShowAt):
       Title: ahko where
