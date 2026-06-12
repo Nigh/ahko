@@ -1,5 +1,9 @@
 ﻿#include meta.ahk
 
+if !A_IsCompiled {
+	Return
+}
+
 if FileExist("updater.exe") {
 	FileDelete("updater.exe")
 }
