@@ -10,11 +10,24 @@ ahko is a quick launcher for windows.
 
 ## Setup
 
+The setup window is built with [ahk-xaml](https://github.com/owhs/ahk-xaml) (WPF UI hosted from AutoHotkey v2). Layout is defined in `setup/setup.axml`; logic lives in `setup/ahko_setup_gui.ahk`. The vendored framework is kept isolated under `lib/ahk-xaml/`.
+
 ![](./assets/setup.png)
 
-right click the `ahko` tray icon, and then click the `Setup`
+Right-click the `ahko` tray icon, then click **Setup**.
 
 ![](./assets/setupui.png)
+
+### ahk-xaml integration
+
+| Path | Role |
+|------|------|
+| `lib/ahk-xaml/` | Vendored [ahk-xaml](https://github.com/owhs/ahk-xaml) engine (WPF host, generator, components) |
+| `setup/setup.axml` | Declarative setup UI markup (AXML) |
+| `setup/ahko_setup_gui.ahk` | Setup window logic, config read/write, event handlers |
+| `themes.ini` | Default theme tokens consumed by the framework |
+
+Setup fields mirror the earlier native GUI: watch folder, hotkey (+ Win modifier), display monitor, fullscreen toggle, and Windows startup. The main launcher grid still uses GDIp rendering.
 
 ## Usage
 

@@ -1,0 +1,118 @@
+@Template SectionLabel:
+  TextBlock:
+    Text: "{{Title}}"
+    FontSize: 26
+    FontWeight: Bold
+    Foreground: "{DynamicResource TextSub}"
+    Margin: "0,0,0,8"
+
+ScrollViewer:
+  VerticalScrollBarVisibility: Auto
+  HorizontalScrollBarVisibility: Disabled
+
+  StackPanel:
+    Margin: "24,12,24,20"
+
+    SectionLabel (LblWatch):
+      Title: Watch folder
+
+    Grid (RowWatch):
+      Cols: "*, Auto"
+      Margin: "0,0,0,4"
+      TextBox (TxtPath):
+        Grid_Column: 0
+        Height: 32
+        Margin: "0,0,10,0"
+        Text: $Path
+        VerticalContentAlignment: Center
+      Button (BtnSelect):
+        Grid_Column: 1
+        Content: Select
+        Width: 90
+        Height: 32
+        OnClick: setup_path
+
+    SectionLabel (LblHotkey):
+      Title: Hotkey
+      Margin: "0,14,0,8"
+
+    Grid (RowHotkey):
+      Cols: "*, Auto"
+      Margin: "0,0,0,4"
+      TextBox (TxtHotkey):
+        Grid_Column: 0
+        Height: 32
+        Margin: "0,0,10,0"
+        IsReadOnly: True
+        Cursor: Hand
+        VerticalContentAlignment: Center
+        Text: $Hotkey
+      CheckBox (ChkHotkeyWin):
+        Grid_Column: 1
+        Content: Win
+        VerticalAlignment: Center
+        IsChecked: $HotkeyWin
+        OnClick: hotkeyText_update
+
+    StackPanel:
+      Orientation: Horizontal
+      Margin: "0,2,0,0"
+      TextBlock (TxtHotkeyHint):
+        Text: Hotkey is
+        FontSize: 13
+        VerticalAlignment: Bottom
+        Margin: "0,0,4,0"
+
+      TextBlock (TxtHotkeyText):
+        Text: $HotkeyText
+        FontSize: 18
+        FontWeight: Bold
+        Foreground: "{DynamicResource Accent}"
+        VerticalAlignment: Bottom
+
+    SectionLabel (LblShowAt):
+      Title: ahko where
+      Margin: "0,14,0,8"
+
+    ComboBox (CmbShowAt):
+      Height: 32
+      Margin: "0,0,0,4"
+      SelectedIndex: $ShowAtIndex
+      OnSelectionChanged: showAt_update
+
+    SectionLabel (LblOther):
+      Title: Other
+      Margin: "0,14,0,8"
+
+    CheckBox (ChkFullscreen):
+      Content: Enable in fullscreen
+      Margin: "0,0,0,6"
+      IsChecked: $Fullscreen
+      OnClick: enable_fullscreen_update
+
+    CheckBox (ChkAutoStart):
+      Content: Startup with Windows
+      Margin: "0,0,0,20"
+      IsChecked: $AutoStart
+      OnClick: autoStartup_update
+
+    Grid (RowButtons):
+      Cols: "*, 16, *"
+      Margin: "0,8,0,12"
+      Button (BtnSave):
+        Grid_Column: 0
+        Content: Save
+        Height: 44
+        OnClick: ahko_setup_save
+      Button (BtnCancel):
+        Grid_Column: 2
+        Content: Cancel
+        Height: 44
+        OnClick: ahko_setup_cancel
+
+    TextBlock:
+      HorizontalAlignment: Right
+      Margin: "0,4,0,0"
+      FontSize: 11
+      Foreground: "{DynamicResource TextSub}"
+      Text: github.com/Nigh/ahko
