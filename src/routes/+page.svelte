@@ -21,9 +21,8 @@
   /** Horizontal padding on `main` (`p-2` = 8px each side). Panel width must satisfy panelW + padX <= innerWidth. */
   const padX = 16;
 
-  /** Space above grid for breadcrumb badge (single-folder navigation only). */
-  const BREADCRUMB_H = 28;
-  const BREADCRUMB_GAP = 8;
+  /** Compact path row height (one cell wide, shorter than launcher tiles). */
+  const PATH_BAR_H = 28;
 
   /** 4×4 slot matrix (16 keys); matches backend `ITEM_KEYS` set. */
   const SLOT_ROWS: string[][] = [
@@ -42,13 +41,12 @@
   let launcherH = $state(400);
   let viewportW = $state(2000);
 
-  /** Height available for the 4 tile rows (below breadcrumb). */
-  let gridViewportH = $derived(Math.max(160, launcherH - BREADCRUMB_H - BREADCRUMB_GAP));
-
-  let gapPx = $derived(Math.max(6, Math.min(16, Math.round(gridViewportH * 0.018))));
+  let gapPx = $derived(Math.max(6, Math.min(16, Math.round(launcherH * 0.018))));
+  /** Height available for the 4 launcher tile rows (below path row). */
+  let gridViewportH = $derived(Math.max(160, launcherH - PATH_BAR_H - gapPx));
   /** Panel width = 5.5*cell + 4.5*gap; cap cell so panel + padX fits viewport. */
   let cellPx = $derived.by(() => {
-    const g = Math.max(6, Math.min(16, Math.round(gridViewportH * 0.018)));
+    const g = Math.max(6, Math.min(16, Math.round(launcherH * 0.018)));
     const fromHeight = (gridViewportH - 3 * g) / 4;
     const avail = Math.max(0, viewportW - padX);
     const fromWidth = (avail - 4.5 * g) / 5.5;
@@ -81,7 +79,7 @@
 
   const visibleItems = $derived(current ?? items);
 
-  const pathBadge = $derived(currentFolderName ? `root/${currentFolderName}` : "root");
+  const pathBadge = $derived(currentFolderName ?? "root");
 
   /** Emoji / icon row: ~60% of tile height. */
   let iconFontPx = $derived(Math.round(Math.max(14, cellPx * 0.6)));
@@ -126,6 +124,10 @@
 
   async function hide() {
     await invoke("hide_window");
+  }
+
+  async function openSetup() {
+    await invoke("open_setup_window");
   }
 
   /** Same outcome as window blur: leave submenu and hide launcher. */
@@ -214,23 +216,35 @@
 </script>
 
 <main
-  class="m-0 box-border flex h-[100dvh] min-h-[100dvh] w-full max-h-[100dvh] max-w-[100dvw] select-none items-center justify-center overflow-hidden bg-transparent p-2 text-zinc-200"
+  class="m-0 box-border flex h-[100dvh] min-h-[100dvh] w-full max-h-[100dvh] max-w-[100dvw] select-none items-center justify-center overflow-hidden bg-transparent p-2 text-base-content"
   style="box-sizing: border-box;"
   onpointerdown={onMainPointerDown}
 >
   <div
-    class="launcher-panel isolate flex max-h-full max-w-full shrink-0 flex-col box-border [contain:paint]"
-    style={`height: ${launcherH}px; width: ${panelWidthPx}px;`}
+    class="launcher-panel isolate flex max-h-full max-w-full shrink-0 flex-col justify-center box-border [contain:paint]"
+    style={`height: ${launcherH}px; width: ${panelWidthPx}px; gap: ${gapPx}px;`}
   >
     <div
-      class="mb-0 flex shrink-0 items-center overflow-hidden rounded-lg border-2 border-rose-400 bg-zinc-900 px-2.5 py-1 font-mono font-medium leading-none tracking-tight text-zinc-400"
-      style={`height: ${BREADCRUMB_H}px; min-height: ${BREADCRUMB_H}px; width: ${rowWidthPx}px; font-size: ${titleFontPx}px;`}
-      aria-live="polite"
-      title={pathBadge}
+      class="flex shrink-0 flex-row"
+      style={`margin-left: 0px; width: ${rowWidthPx}px; height: ${PATH_BAR_H}px; gap: ${gapPx}px;`}
     >
-      <span class="truncate">{pathBadge}</span>
+      <div
+        class="relative box-border flex min-w-0 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-base-300 bg-base-200 px-1.5 font-mono font-medium leading-none tracking-tight text-base-content/60"
+        style={`width: ${cellPx}px; height: ${PATH_BAR_H}px; font-size: ${titleFontPx}px;`}
+        aria-live="polite"
+        title={pathBadge}
+      >
+        <span class="truncate">{pathBadge}</span>
+      </div>
+      <button
+        type="button"
+        class="relative box-border flex shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 border-primary bg-base-100 font-semibold leading-none text-primary outline-none transition-colors duration-150 ease-out hover:border-primary hover:bg-primary/80 hover:text-primary-content hover:ring-2 hover:ring-inset hover:ring-primary active:bg-base-100"
+        style={`width: ${cellPx}px; height: ${PATH_BAR_H}px; font-size: ${titleFontPx}px;`}
+        onclick={() => openSetup()}
+      >
+        Setup
+      </button>
     </div>
-    <div class="flex min-h-0 flex-1 shrink flex-col justify-center" style={`gap: ${gapPx}px; padding-top: ${BREADCRUMB_GAP}px`}>
     {#each SLOT_ROWS as row, ri}
       <div
         class="flex shrink-0 flex-row"
@@ -241,12 +255,12 @@
           {#if item}
             <button
               type="button"
-              class="relative box-border flex min-h-0 min-w-0 shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-rose-400 bg-zinc-800 text-zinc-100 outline-none transition-colors duration-150 ease-out hover:bg-rose-400/80 hover:border-rose-300 hover:ring-2 hover:ring-inset hover:ring-rose-400 active:bg-zinc-800"
+              class="relative box-border flex min-h-0 min-w-0 shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-primary bg-base-100 text-base-content outline-none transition-colors duration-150 ease-out hover:border-primary hover:bg-primary/80 hover:text-primary-content hover:ring-2 hover:ring-inset hover:ring-primary active:bg-base-100"
               style={`width: ${cellPx}px; height: ${cellPx}px;`}
               onclick={() => activate(item)}
             >
               <span
-                class="pointer-events-none absolute left-1.5 top-1.5 z-10 inline-flex h-6 min-w-6 items-center justify-center rounded border-2 border-rose-400 bg-zinc-900 px-1 font-black uppercase leading-none text-rose-200"
+                class="pointer-events-none absolute left-1.5 top-1.5 z-10 inline-flex h-6 min-w-6 items-center justify-center rounded border-2 border-primary bg-base-200 px-1 font-black uppercase leading-none text-primary"
                 style={`font-size: ${titleFontPx}px;`}
                 >{item.key}</span
               >
@@ -261,12 +275,12 @@
             </button>
           {:else}
             <div
-              class="relative box-border flex shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-zinc-700 bg-zinc-900"
+              class="relative box-border flex shrink-0 flex-col overflow-hidden rounded-2xl border-2 border-base-300 bg-base-200"
               style={`width: ${cellPx}px; height: ${cellPx}px;`}
               aria-hidden="true"
             >
               <span
-                class="pointer-events-none absolute left-1.5 top-1.5 inline-flex h-6 min-w-6 items-center justify-center rounded border-2 border-zinc-600 bg-zinc-900 px-1 font-black uppercase leading-none text-zinc-500"
+                class="pointer-events-none absolute left-1.5 top-1.5 inline-flex h-6 min-w-6 items-center justify-center rounded border-2 border-base-300 bg-base-200 px-1 font-black uppercase leading-none text-base-content/40"
                 style={`font-size: ${titleFontPx}px;`}
                 >{slotKey}</span
               >
@@ -275,6 +289,5 @@
         {/each}
       </div>
     {/each}
-    </div>
   </div>
 </main>

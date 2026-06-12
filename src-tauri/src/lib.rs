@@ -238,8 +238,11 @@ fn open_or_focus_setup(app: &AppHandle) -> Result<(), String> {
     }
     WebviewWindowBuilder::new(app, "setup", setup_webview_url(app))
         .title("rusto — Setup")
-        .inner_size(440.0, 760.0)
-        .min_inner_size(360.0, 480.0)
+        .inner_size(440.0, 820.0)
+        .min_inner_size(360.0, 600.0)
+        .decorations(false)
+        .transparent(true)
+        .shadow(true)
         .resizable(true)
         .build()
         .map_err(|e| e.to_string())?;
