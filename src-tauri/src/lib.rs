@@ -5,11 +5,14 @@ use std::{
     fs,
     path::{Path, PathBuf},
     process::{Command, Stdio},
+    sync::Mutex,
+    time::Duration,
 };
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindowBuilder,
+    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, WebviewUrl,
+    WebviewWindow, WebviewWindowBuilder,
 };
 
 const ITEM_KEYS: [&str; 16] = ["1", "2", "3", "q", "w", "e", "a", "s", "d", "4", "r", "f", "z", "x", "c", "v"];
@@ -28,6 +31,8 @@ pub struct AppConfig {
     pub back_hotkey: String,
     pub hide_hotkey: String,
     pub show_at: String,
+    #[serde(default)]
+    pub show_monitor_id: String,
     pub enable_in_fullscreen: bool,
     pub autostart: bool,
     pub custom_openers: Vec<CustomOpener>,
@@ -51,6 +56,29 @@ fn default_custom_openers() -> Vec<CustomOpener> {
     }]
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct PlatformCapabilities {
+    pub session_type: String,
+    pub desktop: String,
+    pub launcher_screen_supported: bool,
+    pub launcher_screen_note: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MonitorInfo {
+    pub id: String,
+    pub name: String,
+    pub is_primary: bool,
+    pub width: u32,
+    pub height: u32,
+    pub x: i32,
+    pub y: i32,
+}
+
+struct MonitorWatchState {
+    fingerprint: Mutex<Vec<String>>,
+}
+
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
@@ -59,6 +87,7 @@ impl Default for AppConfig {
             back_hotkey: "`".into(),
             hide_hotkey: "Esc".into(),
             show_at: "mouse".into(),
+            show_monitor_id: String::new(),
             enable_in_fullscreen: false,
             autostart: false,
             custom_openers: default_custom_openers(),
@@ -178,47 +207,195 @@ fn scan_level(dir: &Path, inner: bool) -> Vec<LauncherItem> {
     result
 }
 
-/// Resize and move `main` to the **work area** (taskbar/dock excluded) of the monitor that
-/// contains the mouse cursor, falling back to primary then first monitor — same idea as
-/// Kando’s full-screen transparent menu window.
-fn fit_main_to_cursor_work_area(app: &AppHandle) {
-    let Some(w) = app.get_webview_window("main") else {
-        return;
-    };
-    let Ok(monitors) = w.available_monitors() else {
-        return;
-    };
-    let primary = w.primary_monitor().ok().flatten();
-    let mon = match Mouse::get_mouse_position() {
-        Mouse::Position { x, y } => monitors.iter().find(|m| {
-            let p = m.position();
-            let s = m.size();
-            x >= p.x
-                && x < p.x + s.width as i32
-                && y >= p.y
-                && y < p.y + s.height as i32
-        }),
-        Mouse::Error => None,
-    }
-    .or_else(|| primary.as_ref())
-    .or_else(|| monitors.first());
+/// Resize and move `main` to the **work area** of the monitor chosen by config
+/// (`mouse` | `focus` | `fixed`), falling back to primary then first monitor.
+fn monitor_id(m: &Monitor) -> String {
+    let p = m.position();
+    let s = m.size();
+    format!("{}x{}@{},{}", s.width, s.height, p.x, p.y)
+}
 
-    if let Some(m) = mon {
-        let wa = m.work_area();
-        let _ = w.set_position(PhysicalPosition::new(wa.position.x, wa.position.y));
-        let _ = w.set_size(PhysicalSize::new(wa.size.width, wa.size.height));
+fn monitor_label(m: &Monitor) -> String {
+    if let Some(name) = m.name().filter(|n| !n.is_empty()) {
+        name.clone()
+    } else {
+        let p = m.position();
+        let s = m.size();
+        format!("{}×{} @ {},{}", s.width, s.height, p.x, p.y)
     }
 }
 
+fn monitors_same(a: &Monitor, b: &Monitor) -> bool {
+    monitor_id(a) == monitor_id(b)
+}
+
+fn monitor_at_point(monitors: &[Monitor], x: i32, y: i32) -> Option<Monitor> {
+    monitors.iter().find(|m| {
+        let p = m.position();
+        let s = m.size();
+        x >= p.x
+            && x < p.x + s.width as i32
+            && y >= p.y
+            && y < p.y + s.height as i32
+    }).cloned()
+}
+
+fn find_monitor_by_id(monitors: &[Monitor], id: &str) -> Option<Monitor> {
+    if id.is_empty() {
+        return None;
+    }
+    if let Some(m) = monitors.iter().find(|m| monitor_id(m) == id).cloned() {
+        return Some(m);
+    }
+    monitors
+        .iter()
+        .find(|m| m.name().is_some_and(|n| n == id))
+        .cloned()
+}
+
+fn desktop_cursor_point(w: &WebviewWindow) -> Option<(i32, i32)> {
+    if let Ok(pos) = w.cursor_position() {
+        return Some((pos.x.round() as i32, pos.y.round() as i32));
+    }
+    match Mouse::get_mouse_position() {
+        Mouse::Position { x, y } => Some((x, y)),
+        Mouse::Error => None,
+    }
+}
+
+fn monitor_for_point(w: &WebviewWindow, monitors: &[Monitor], x: i32, y: i32) -> Option<Monitor> {
+    w.monitor_from_point(x as f64, y as f64)
+        .ok()
+        .flatten()
+        .or_else(|| monitor_at_point(monitors, x, y))
+}
+
+fn focused_window_center() -> Option<(i32, i32)> {
+    active_win_pos_rs::get_active_window().ok().map(|w| {
+        (
+            (w.position.x + w.position.width / 2.0) as i32,
+            (w.position.y + w.position.height / 2.0) as i32,
+        )
+    })
+}
+
+fn collect_monitor_infos(w: &WebviewWindow) -> Result<Vec<MonitorInfo>, String> {
+    let monitors = w.available_monitors().map_err(|e| e.to_string())?;
+    let primary = w.primary_monitor().map_err(|e| e.to_string())?;
+    Ok(monitors
+        .into_iter()
+        .map(|m| {
+            let p = m.position();
+            let s = m.size();
+            MonitorInfo {
+                id: monitor_id(&m),
+                name: monitor_label(&m),
+                is_primary: primary.as_ref().is_some_and(|pm| monitors_same(pm, &m)),
+                width: s.width,
+                height: s.height,
+                x: p.x,
+                y: p.y,
+            }
+        })
+        .collect())
+}
+
+fn monitor_fingerprints(w: &WebviewWindow) -> Result<Vec<String>, String> {
+    Ok(w.available_monitors()
+        .map_err(|e| e.to_string())?
+        .iter()
+        .map(monitor_id)
+        .collect())
+}
+
+fn pick_target_monitor(w: &WebviewWindow, config: &AppConfig) -> Option<Monitor> {
+    let monitors = w.available_monitors().ok()?;
+    if monitors.is_empty() {
+        return None;
+    }
+    let primary = w.primary_monitor().ok().flatten();
+    let fallback = || primary.clone().or_else(|| monitors.first().cloned());
+
+    match config.show_at.as_str() {
+        "fixed" => find_monitor_by_id(&monitors, &config.show_monitor_id).or_else(fallback),
+        "focus" => focused_window_center()
+            .and_then(|(x, y)| monitor_for_point(w, &monitors, x, y))
+            .or_else(fallback),
+        _ => desktop_cursor_point(w)
+            .and_then(|(x, y)| monitor_for_point(w, &monitors, x, y))
+            .or_else(fallback),
+    }
+}
+
+fn apply_monitor_work_area(w: &WebviewWindow, mon: &Monitor) {
+    let wa = mon.work_area();
+    let _ = w.set_position(PhysicalPosition::new(wa.position.x, wa.position.y));
+    let _ = w.set_size(PhysicalSize::new(wa.size.width, wa.size.height));
+}
+
+fn fit_main_to_work_area(app: &AppHandle, config: &AppConfig) {
+    let Some(w) = app.get_webview_window("main") else {
+        return;
+    };
+    if let Some(m) = pick_target_monitor(&w, config) {
+        apply_monitor_work_area(&w, &m);
+    }
+}
+
+fn emit_monitors_if_changed(app: &AppHandle) {
+    let Some(w) = app.get_webview_window("main") else {
+        return;
+    };
+    let Ok(fps) = monitor_fingerprints(&w) else {
+        return;
+    };
+    let state = app.state::<MonitorWatchState>();
+    let mut last = state.fingerprint.lock().expect("monitor watch lock");
+    if *last == fps {
+        return;
+    }
+    *last = fps;
+    drop(last);
+    if let Ok(infos) = collect_monitor_infos(&w) {
+        let _ = app.emit("monitors-changed", infos);
+    }
+}
+
+fn publish_monitors(app: &AppHandle) {
+    let Some(w) = app.get_webview_window("main") else {
+        return;
+    };
+    if let Ok(fps) = monitor_fingerprints(&w) {
+        *app
+            .state::<MonitorWatchState>()
+            .fingerprint
+            .lock()
+            .expect("monitor watch lock") = fps;
+    }
+    if let Ok(infos) = collect_monitor_infos(&w) {
+        let _ = app.emit("monitors-changed", infos);
+    }
+}
+
+fn start_monitor_watch(app: AppHandle) {
+    std::thread::spawn(move || loop {
+        std::thread::sleep(Duration::from_secs(2));
+        let handle = app.clone();
+        let _ = handle.run_on_main_thread({
+            let handle = handle.clone();
+            move || emit_monitors_if_changed(&handle)
+        });
+    });
+}
+
 fn show_main(app: &AppHandle) {
-    fit_main_to_cursor_work_area(app);
+    let config = load_config().unwrap_or_default();
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
+        fit_main_to_work_area(app, &config);
         let _ = w.set_always_on_top(true);
         let _ = w.set_focus();
-        // Request user attention (flashing taskbar) as a fallback for stubborn WMs
         let _ = w.request_user_attention(Some(tauri::UserAttentionType::Critical));
-        // Notify frontend to grab focus explicitly
         let _ = app.emit_to("main", "show-request", ());
     }
 }
@@ -238,7 +415,7 @@ fn open_or_focus_setup(app: &AppHandle) -> Result<(), String> {
     }
     WebviewWindowBuilder::new(app, "setup", setup_webview_url(app))
         .title("rusto — Setup")
-        .inner_size(440.0, 820.0)
+        .inner_size(440.0, 880.0)
         .min_inner_size(360.0, 600.0)
         .decorations(false)
         .transparent(true)
@@ -247,6 +424,36 @@ fn open_or_focus_setup(app: &AppHandle) -> Result<(), String> {
         .build()
         .map_err(|e| e.to_string())?;
     Ok(())
+}
+
+#[tauri::command]
+fn get_platform_capabilities() -> PlatformCapabilities {
+    let session_type = std::env::var("XDG_SESSION_TYPE").unwrap_or_else(|_| "unknown".into());
+    let desktop = std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_else(|_| "unknown".into());
+    let wayland = session_type.eq_ignore_ascii_case("wayland");
+    let launcher_screen_supported = !(cfg!(target_os = "linux") && wayland);
+    let launcher_screen_note = if launcher_screen_supported {
+        String::new()
+    } else {
+        "Linux Wayland (e.g. Ubuntu GNOME) does not allow apps to choose their screen. \
+         Launcher screen settings are saved but have no effect until you log into an X11 session \
+         or Tauri adds Wayland support."
+            .into()
+    };
+    PlatformCapabilities {
+        session_type,
+        desktop,
+        launcher_screen_supported,
+        launcher_screen_note,
+    }
+}
+
+#[tauri::command]
+fn list_monitors(app: AppHandle) -> Result<Vec<MonitorInfo>, String> {
+    let w = app
+        .get_webview_window("main")
+        .ok_or_else(|| "Main window not found".to_string())?;
+    collect_monitor_infos(&w)
 }
 
 #[tauri::command]
@@ -289,9 +496,21 @@ fn validate_custom_openers(openers: &[CustomOpener]) -> Result<(), String> {
     Ok(())
 }
 
+fn validate_show_at(config: &AppConfig) -> Result<(), String> {
+    match config.show_at.as_str() {
+        "mouse" | "focus" | "fixed" => {}
+        other => return Err(format!("Invalid launcher screen mode: {other}")),
+    }
+    if config.show_at == "fixed" && config.show_monitor_id.trim().is_empty() {
+        return Err("Select a screen when launcher position is fixed".into());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 fn save_config(app: AppHandle, config: AppConfig) -> Result<(), String> {
     validate_custom_openers(&config.custom_openers)?;
+    validate_show_at(&config)?;
     let dir = config_dir()?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     fs::write(
@@ -299,6 +518,7 @@ fn save_config(app: AppHandle, config: AppConfig) -> Result<(), String> {
         serde_json::to_string_pretty(&config).map_err(|e| e.to_string())?,
     )
     .map_err(|e| e.to_string())?;
+    fit_main_to_work_area(&app, &config);
     let _ = app.emit_to("main", "config-changed", ());
     Ok(())
 }
@@ -388,6 +608,9 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             show_main(app);
         }))
+        .manage(MonitorWatchState {
+            fingerprint: Mutex::new(Vec::new()),
+        })
         .setup(|app| {
             let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
             let setup = MenuItem::with_id(app, "setup", "Setup", true, None::<&str>)?;
@@ -423,7 +646,10 @@ pub fn run() {
             {
                 eprintln!("rusto: system tray unavailable ({e}). The app will still run; use the main window or bind a desktop shortcut to show it.");
             }
-            fit_main_to_cursor_work_area(&app.handle());
+            let config = load_config().unwrap_or_default();
+            fit_main_to_work_area(&app.handle(), &config);
+            publish_monitors(&app.handle());
+            start_monitor_watch(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -432,7 +658,9 @@ pub fn run() {
             scan_launcher,
             launch_item,
             hide_window,
-            open_setup_window
+            open_setup_window,
+            list_monitors,
+            get_platform_capabilities
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
