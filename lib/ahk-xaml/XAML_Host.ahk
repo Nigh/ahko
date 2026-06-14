@@ -720,8 +720,12 @@ class XAMLHost {
 
     static CompileEngine(libDir, sharedExe, extraResources := [], embedDeps := false) {
         global XAML_ENABLE_WEBVIEW, XAML_ENABLE_AVALONEDIT, XAML_ENABLE_DOCUMENT, XAML_ENABLE_SHADERS
+        isCI := (EnvGet("CI") = "true")
         if (A_IsCompiled) {
-            MsgBox("AHK-XAML: Dynamic compilation is not available when the script is compiled. Please compile the engine separately.")
+            if isCI
+                FileAppend("ERROR: AHK-XAML: Dynamic compilation is not available when the script is compiled.`n", "*")
+            else
+                MsgBox("AHK-XAML: Dynamic compilation is not available when the script is compiled. Please compile the engine separately.")
             return
         }
 
@@ -729,7 +733,10 @@ class XAMLHost {
         errLog := A_Temp "\AhkWpf\AhkWpfError.log"
         sourceCs := libDir "\dep\XAML_AHK_Bridge.cs"
         if !FileExist(sourceCs) {
-            MsgBox("XAML_AHK_Bridge.cs not found in lib\dep directory!`nCannot compile shared engine.", "AHK-XAML", "Iconx")
+            if isCI
+                FileAppend("ERROR: XAML_AHK_Bridge.cs not found in lib\dep directory! Cannot compile shared engine.`n", "*")
+            else
+                MsgBox("XAML_AHK_Bridge.cs not found in lib\dep directory!`nCannot compile shared engine.", "AHK-XAML", "Iconx")
             return false
         }
 
@@ -838,7 +845,10 @@ class XAMLHost {
         try FileDelete(sharedExe)
         if FileExist(sharedExe) {
             SplitPath(sharedExe, &sharedName)
-            MsgBox("Error: The target DLL '" sharedName "' is locked by a running process.`n`nPlease close all running instances of your application and try compiling again.", "Build Error", "Iconx")
+            if isCI
+                FileAppend("ERROR: The target DLL '" sharedName "' is locked by a running process.`n", "*")
+            else
+                MsgBox("Error: The target DLL '" sharedName "' is locked by a running process.`n`nPlease close all running instances of your application and try compiling again.", "Build Error", "Iconx")
             return false
         }
 
@@ -885,7 +895,11 @@ class XAMLHost {
                 }
             }
 
-            XAMLHost.ShowErrorDialog("Engine Compile Error", "Failed to compile background engine.", snippet, errOut, false, reason)
+            if isCI {
+                FileAppend("ERROR: Engine Compile Error - Failed to compile background engine.`n" (reason ? "Reason: " reason "`n" : "") errOut "`n", "*")
+            } else {
+                XAMLHost.ShowErrorDialog("Engine Compile Error", "Failed to compile background engine.", snippet, errOut, false, reason)
+            }
             return false
         }
         try FileDelete(errLog)
