@@ -6,7 +6,7 @@ ahko is a quick launcher for windows.
 
 ### GDIp Gridview :
 
-![image](https://github.com/Nigh/ahko/assets/1407471/74ca1700-c642-44cb-badd-0874a867e6b1)
+![launcher](./assets/launcher.png)
 
 ## Setup
 
@@ -54,6 +54,8 @@ For example, put `abc.lnk` and `abc.png` in the same folder, the icon of `abc.ln
 ahko uses Windows Task Scheduler to enable auto-start at login with administrator privileges. This ensures ahko can properly interact with other windows that are running as administrator.
 
 > **Note:** When running with administrator privileges via auto-start, the system tray icon may not be visible. This is a known side effect of the current auto-start method.
+
+![](./assets/setup2.png)
 
 To access the tray menu when the tray icon is not available, click the **"More"** button in the ahko grid view title bar. This will display the same context menu that would normally appear when right-clicking the tray icon, including options such as Setup, GitHub, Donate, Reload, and Exit.
 
