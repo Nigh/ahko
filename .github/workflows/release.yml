@@ -33,6 +33,8 @@ jobs:
 
       - name: Build
         run: ./ahk-compile-toolset/AutoHotkey64.exe ./distribution.ahk
+        env:
+          CI: "true"
 
       - name: Create Release
         uses: softprops/action-gh-release@v3

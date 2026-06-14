@@ -106,7 +106,7 @@ app.ahk (entry point)
 | `tray.ahk` | System tray context menu: version, Setup, GitHub, Donate, Reload, Exit |
 | `update.ahk` | Auto-update via GitHub releases API with mirror support |
 | `updater.c` / `updater.h` | C program compiled via TCC; extracts downloaded zip and restarts app |
-| `distribution.ahk` | Build script: compiles updater.c, compiles AHK to exe, creates zip in `dist/` |
+| `distribution.ahk` | Build script: compiles updater.c, compiles AHK to exe, creates zip in `dist/`. CI-aware: uses `Fail()` function that outputs to stderr in CI mode (`CI=true` env var), shows `MsgBox` in GUI mode. Checks `RunWait` exit codes and validates file existence before `FileMove` |
 | `set_auto_run.ahk` | Adds/removes app from Windows startup via Task Scheduler (`schtasks`) with admin privileges and no UAC prompt |
 
 ### Key Design Patterns
@@ -120,6 +120,7 @@ app.ahk (entry point)
 7. **ahk-xaml setup GUI** - Setup uses vendored WPF framework with AXML layout; launcher grid remains GDIp
 8. **UAC mode fallback** - When running elevated (`A_IsAdmin`), system tray is invisible (Session 0). Grid title bar gets a "More" button to access tray menu as a popup. Empty grid in UAC mode auto-opens setup GUI instead
 9. **Git submodule for toolchain** - `ahk-compile-toolset` bundles compiler and runtime
+10. **CI mode** - Build scripts detect `CI=true` environment variable to suppress GUI dialogs and use stderr for error output, preventing CI hangs
 
 ---
 
@@ -159,7 +160,7 @@ Pushing a tag matching `v*` (e.g., `v1.0.3`) triggers the GitHub Actions workflo
 
 1. Checks out the repo with submodules (for `ahk-compile-toolset`) with full history (`fetch-depth: 0`)
 2. **Auto-injects version and update_log** into `meta.ahk` via PowerShell: extracts version from tag name (e.g., `v1.0.3` → `1.0.3`) and generates `update_log` from `git log` between previous and current tags
-3. Builds via `./ahk-compile-toolset/AutoHotkey64.exe ./distribution.ahk`
+3. Builds via `./ahk-compile-toolset/AutoHotkey64.exe ./distribution.ahk` with `CI=true` environment variable
 4. Creates a GitHub Release with `dist/ahko.zip` and `dist/version.txt`
 5. Auto-generates release notes from commits between tags
 
@@ -172,7 +173,7 @@ Pushing a tag matching `v*` (e.g., `v1.0.3`) triggers the GitHub Actions workflo
 - **Classes:** Use AHK v2 class syntax with `class` keyword
 - **Config:** Runtime config via `setting.ini` (INI format)
 - **Metadata:** Version and app info centralized in `meta.ahk`
-- **Third-party code:** `Gdip_All.ahk` and `lib/ahk-xaml/` are vendored libraries; do not modify unless absolutely necessary
+- **Third-party code:** `Gdip_All.ahk` and `lib/ahk-xaml/` are vendored libraries; do not modify unless absolutely necessary. `XAML_Host.ahk` was modified to support CI mode (suppress GUI dialogs when `CI=true` env var is set)
 - **Git submodule:** `ahk-compile-toolset` is a submodule - do not commit changes to its contents directly
 
 ---
