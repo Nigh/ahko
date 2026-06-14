@@ -110,9 +110,11 @@ ScrollViewer:
         Height: 44
         OnClick: ahko_setup_cancel
 
-    TextBlock:
+    TextBlock (TxtGithub):
       HorizontalAlignment: Right
       Margin: "0,4,0,0"
       FontSize: 11
-      Foreground: "{DynamicResource TextSub}"
+      Foreground: "{DynamicResource Accent}"
       Text: github.com/Nigh/ahko
+      Cursor: Hand
+      OnMouseLeftButtonDown: open_github
