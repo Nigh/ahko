@@ -1,4 +1,4 @@
-﻿#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.0
 SetWorkingDir(A_ScriptDir)
 #Warn Unreachable, Off
 #SingleInstance force
@@ -11,8 +11,7 @@ if A_Args.Length > 0
 {
 	for n, param in A_Args
 	{
-		RegExMatch(param, "--out=(\w+)", &outName)
-		if (outName[1] == "version") {
+		if RegExMatch(param, "--out=(\w+)", &outName) && outName[1] == "version" {
 			f := FileOpen(versionFilename, "w", "UTF-8-RAW")
 			f.Write(version)
 			f.Close()

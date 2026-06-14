@@ -378,12 +378,8 @@ class ahko_gridview_class
 		this._stopMisfireDetection()
 		this._mouseCheckTimer := ObjBindMethod(this, "_checkMouseClick")
 		SetTimer(this._mouseCheckTimer, 50)
-		this._ih := InputHook("L")
-		this._ih.KeyOpt("{All}", "E")
-		this._ih.OnEnd := ObjBindMethod(this, "_onKeyboardInput")
-		this._ih.Start()
+		this._startKeyboardHook()
 	}
-
 	_stopMisfireDetection() {
 		if (this._mouseCheckTimer) {
 			SetTimer(this._mouseCheckTimer, 0)
@@ -395,7 +391,13 @@ class ahko_gridview_class
 			this._ih := ""
 		}
 	}
-
+	_startKeyboardHook() {
+		this._ih := InputHook("L")
+		this._ih.KeyOpt("{All}", "E")
+		this._ih.KeyOpt("{LCtrl}{RCtrl}{LAlt}{RAlt}{LShift}{RShift}{LWin}{RWin}", "-E")
+		this._ih.OnEnd := ObjBindMethod(this, "_onKeyboardInput")
+		this._ih.Start()
+	}
 	_checkMouseClick() {
 		if (!this._isAnyVisible()) {
 			this._stopMisfireDetection()
@@ -411,17 +413,18 @@ class ahko_gridview_class
 			MouseGetPos(, , &winId)
 			if (!this._isAhkoHwnd(winId)) {
 				this._hideAll()
+				return
 			}
 		}
 		if (DllCall("GetAsyncKeyState", "int", 0x02) & 1) {
 			MouseGetPos(, , &winId)
 			if (!this._isAhkoHwnd(winId)) {
 				this._hideAll()
+				return
 			}
 		}
 	}
-
-	_onKeyboardInput(ih, vk := 0, sc := 0) {
+	_onKeyboardInput(ih, EndReason := "") {
 		if (!this._isAnyVisible()) {
 			this._stopMisfireDetection()
 			return

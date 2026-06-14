@@ -1,8 +1,8 @@
 #Requires AutoHotkey v2.0
-#Include "XAML_Host.ahk"
-#Include "XAML_Config.ahk"
-#Include "XAML_Generator.ahk"
-#Include "*i XAML_DevTools.ahk"
+#Include XAML_Host.ahk
+#Include XAML_Config.ahk
+#Include XAML_Generator.ahk
+#Include *i XAML_DevTools.ahk
 
 class XAML_GUI {
     __New(title := "Fluid UI", options := {}) {
