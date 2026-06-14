@@ -16,6 +16,8 @@ if not RegExMatch(showat, showat_list)
 	showat := "10"
 }
 
+isUacMode := A_IsAdmin
+
 #include isFullScreen.ahk
 #include setup/ahko_setup_gui.ahk
 
@@ -144,7 +146,6 @@ isNotFullScreen(*)
 }
 
 #Include ahko_ui.ahk
-isUacMode := A_IsAdmin
 ahko_ui_init()
 
 ahko_invoke(*) {

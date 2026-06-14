@@ -1,8 +1,8 @@
 #Requires AutoHotkey v2.0
 #Warn Unreachable, Off
-#Include "../lib/ahk-xaml/XAML_GUI.ahk"
-#Include "../lib/ahk-xaml/AXML.ahk"
-#Include "../lib/ahk-xaml/XAML_Components.ahk"
+#Include ../lib/ahk-xaml/XAML_GUI.ahk
+#Include ../lib/ahk-xaml/AXML.ahk
+#Include ../lib/ahk-xaml/XAML_Components.ahk
 
 global SetupAppState := ""
 global setupApp := ""
@@ -48,19 +48,30 @@ setup_init() {
 	setupApp := XAML_GUI("ahko Setup", options)
 	setupApp.tabs.Visibility("Collapsed")
 
-	result := AXML.ParseFile(A_ScriptDir "\setup\setup.axml", setupApp.main, SetupAppState)
+	if (A_IsCompiled) {
+		axmlTemp := A_Temp "\ahko_setup.axml"
+		FileInstall("setup\setup.axml", axmlTemp, 1)
+		axmlPath := axmlTemp
+	} else {
+		axmlPath := A_ScriptDir "\setup\setup.axml"
+	}
+	content := FileRead(axmlPath, "UTF-8")
+	result := AXML.ParseString(content, setupApp.main, SetupAppState, "setup.axml")
 	cmb := setupApp.X.Find("CmbShowAt")
 	for item in setup_build_showAtDDL() {
 		cmb.Add("ComboBoxItem").Content(item)
 	}
 
-	setupUi := setupApp.Compile()
+	if (A_IsCompiled) {
+		setupUi := setupApp.Load("ahko_bundled.dll")
+	} else {
+		setupUi := setupApp.Compile()
+	}
 	AXML.BindAll(setupUi, result, SetupAppState)
 
 	txtHotkey := setupApp.X.Find("TxtHotkey")
 	txtHotkey._Props["Name"] := txtHotkey._Props["x:Name"]
 	setupApp.RegisterHotKeyChange(txtHotkey, setup_hotkey_changed)
-	setupUi.OnEvent("BtnClose", "Click", ahko_setup_cancel)
 	for ctrlName in ["TxtPath", "TxtHotkey", "ChkHotkeyWin", "CmbShowAt", "ChkFullscreen", "ChkAutoStart"] {
 		setupUi.Track(ctrlName)
 	}
@@ -236,7 +247,7 @@ ahko_setup_show(*) {
 	if (IsSet(ahko_gridview) && !ahko_gridview.grid_gui.isHide) {
 		ahko_gridview._hideAll()
 	}
-	Hotkey hotkeys, "Off"
+	try Hotkey hotkeys, "Off"
 	setup_init()
 	setup_sync_state_from_config()
 	setup_push_state_to_ui()

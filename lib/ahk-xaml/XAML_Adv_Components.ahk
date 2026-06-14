@@ -1,8 +1,8 @@
 #Requires AutoHotkey v2.0
-#Include "XAML_Host.ahk"
-#Include "XAML_Dialog.ahk"
-#Include "XAML_Generator.ahk"
-#Include "XAML_Components.ahk"
+#Include XAML_Host.ahk
+#Include XAML_Dialog.ahk
+#Include XAML_Generator.ahk
+#Include XAML_Components.ahk
 
 ; ==============================================================================
 ; COMMAND BAR
