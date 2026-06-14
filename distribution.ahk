@@ -62,6 +62,19 @@ catch as e
 	ExitApp
 }
 
+SplitPath(binaryFilename, , , , &nameNoExt)
+bundleDllName := nameNoExt "_bundled.dll"
+
+try
+{
+	RunWait("./ahk-compile-toolset/AutoHotkey64.exe gen_setup_dll.ahk")
+}
+catch as e
+{
+	MsgBox("setup DLL gen`nERROR CODE=" . e.Message)
+	ExitApp
+}
+
 try
 {
 	RunWait("./ahk-compile-toolset/AutoHotkey64.exe .\" . ahkFilename . " --out=version")
@@ -74,7 +87,7 @@ catch as e
 
 try
 {
-	RunWait("powershell -command `"Compress-Archive -Path .\" binaryFilename " -DestinationPath " downloadFilename '"', , "Hide")
+	RunWait("powershell -command `"Compress-Archive -Path .\" binaryFilename ",.\" bundleDllName " -DestinationPath " downloadFilename '"', , "Hide")
 }
 catch as e
 {
@@ -82,7 +95,8 @@ catch as e
 	ExitApp
 }
 FileDelete(binaryFilename)
+if FileExist(bundleDllName)
+	FileDelete(bundleDllName)
 FileDelete("updater.exe")
 FileMove(downloadFilename, "dist\" downloadFilename, 1)
 FileMove(versionFilename, "dist\" versionFilename, 1)
-MsgBox("Build Finished")

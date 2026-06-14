@@ -1,7 +1,7 @@
 #Requires AutoHotkey v2.0
-#Include "XAML_GUI.ahk"
-#Include "XAML_Config.ahk"
-#Include "XAML_Components.ahk"
+#Include XAML_GUI.ahk
+#Include XAML_Config.ahk
+#Include XAML_Components.ahk
 
 global XAML_DevTools_Instance := ""
 
