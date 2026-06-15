@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./icon.png" alt="ahko" width="200" />
+</p>
+
 # ahko
 
 ahko is a quick launcher for windows.
