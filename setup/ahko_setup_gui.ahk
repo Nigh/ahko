@@ -40,7 +40,7 @@ setup_init() {
 		"MinMaxButtons", false,
 		"Resize", false,
 		"Width", 420,
-		"Height", 530,
+		"Height", 540,
 		"TitleBarHeight", 40,
 		"CloseAction", ahko_setup_cancel
 	)
@@ -263,6 +263,11 @@ ahko_setup_cancel(*) {
 	if (setupUi && setupUi.wpfHwnd) {
 		WinHide("ahk_id " setupUi.wpfHwnd)
 	}
+	if (A_IsCompiled) {
+		TraySetIcon(A_ScriptFullPath)
+	} else {
+		TraySetIcon("icon.ico")
+	}
 	if (fullscreen_enable) {
 		Hotkey hotkeys, ahko_invoke, "On"
 	} else {
@@ -334,6 +339,10 @@ autoStartup_update(state?, ctrl?, event?) {
 	}
 	local enabled := (SetupAppState.AutoStart == "True" || SetupAppState.AutoStart == true || SetupAppState.AutoStart == 1)
 	ahko_setup_autostart(enabled)
+}
+
+open_github(*) {
+	Run("https://github.com/Nigh/ahko")
 }
 
 enable_fullscreen_update(state?, ctrl?, event?) {
