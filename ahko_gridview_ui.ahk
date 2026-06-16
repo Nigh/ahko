@@ -30,9 +30,9 @@ class ahko_gridview_class
 	gmargin := 10
 	titleHeight := 42
 	item_map := Map()
-	_mouseCheckTimer := ""
+	_mouseHook := 0
+	_mouseHookProc := ""
 	_ih := ""
-	_skipMisfireCount := 0
 
 	__New() {
 		for k, v in this.item_pos {
@@ -153,7 +153,6 @@ class ahko_gridview_class
 		uShow(*) {
 			g.isHide := False
 			g.Show(this.gui_showat() " NA")
-			this._skipMisfireCount := 2
 		}
 		g.btnCall := []
 		g.isHide := True
@@ -236,7 +235,6 @@ class ahko_gridview_class
 	{
 		callback_maker() {
 			callback(*) {
-				this._skipMisfireCount := 2
 				guiobj.uHide()
 				if (sub_grid != "" && InStr(ahko_obj.attrib, "D")) {
 					sub_grid.uShow()
@@ -357,10 +355,13 @@ class ahko_gridview_class
 	}
 
 	_isAhkoHwnd(hwnd) {
-		if (hwnd == this.grid_gui.Hwnd)
+		if (!hwnd)
+			return false
+		root := DllCall("GetAncestor", "Ptr", hwnd, "UInt", 2, "Ptr")
+		if (root == this.grid_gui.Hwnd)
 			return true
 		For v in this.grid_sub_gui {
-			if (hwnd == v.Hwnd)
+			if (root == v.Hwnd)
 				return true
 		}
 		return false
@@ -376,14 +377,17 @@ class ahko_gridview_class
 
 	_startMisfireDetection() {
 		this._stopMisfireDetection()
-		this._mouseCheckTimer := ObjBindMethod(this, "_checkMouseClick")
-		SetTimer(this._mouseCheckTimer, 50)
+		this._startMouseHook()
 		this._startKeyboardHook()
 	}
 	_stopMisfireDetection() {
-		if (this._mouseCheckTimer) {
-			SetTimer(this._mouseCheckTimer, 0)
-			this._mouseCheckTimer := ""
+		if (this._mouseHook) {
+			DllCall("UnhookWindowsHookEx", "Ptr", this._mouseHook)
+			this._mouseHook := 0
+		}
+		if (this._mouseHookProc) {
+			CallbackFree(this._mouseHookProc)
+			this._mouseHookProc := ""
 		}
 		if (this._ih) {
 			this._ih.OnEnd := ""
@@ -391,38 +395,32 @@ class ahko_gridview_class
 			this._ih := ""
 		}
 	}
+	_startMouseHook() {
+		this._mouseHookProc := CallbackCreate(this._mouseHook.Bind(this), "F", 3)
+		this._mouseHook := DllCall(
+			"SetWindowsHookEx", "Int", 14,
+			"Ptr", this._mouseHookProc,
+			"Ptr", DllCall("GetModuleHandle", "Ptr", 0, "Ptr"),
+			"UInt", 0, "Ptr")
+	}
+	_mouseHook(nCode, wParam, lParam) {
+		if (nCode >= 0 && this._isAnyVisible()) {
+			if (wParam = 0x0201 || wParam = 0x0204) {
+				x := NumGet(lParam, 0, "Int")
+				y := NumGet(lParam, 4, "Int")
+				targetHwnd := DllCall("WindowFromPoint", "Int64", (y << 32) | (x & 0xFFFFFFFF), "Ptr")
+				if (!this._isAhkoHwnd(targetHwnd))
+					SetTimer(() => this._hideAll(), -0)
+			}
+		}
+		return DllCall("CallNextHookEx", "Ptr", this._mouseHook, "Int", nCode, "Ptr", wParam, "Int64", lParam, "Ptr")
+	}
 	_startKeyboardHook() {
 		this._ih := InputHook("L")
 		this._ih.KeyOpt("{All}", "E")
 		this._ih.KeyOpt("{LCtrl}{RCtrl}{LAlt}{RAlt}{LShift}{RShift}{LWin}{RWin}", "-E")
 		this._ih.OnEnd := ObjBindMethod(this, "_onKeyboardInput")
 		this._ih.Start()
-	}
-	_checkMouseClick() {
-		if (!this._isAnyVisible()) {
-			this._stopMisfireDetection()
-			return
-		}
-		if (this._skipMisfireCount > 0) {
-			this._skipMisfireCount -= 1
-			DllCall("GetAsyncKeyState", "int", 0x01)
-			DllCall("GetAsyncKeyState", "int", 0x02)
-			return
-		}
-		if (DllCall("GetAsyncKeyState", "int", 0x01) & 1) {
-			MouseGetPos(, , &winId)
-			if (!this._isAhkoHwnd(winId)) {
-				this._hideAll()
-				return
-			}
-		}
-		if (DllCall("GetAsyncKeyState", "int", 0x02) & 1) {
-			MouseGetPos(, , &winId)
-			if (!this._isAhkoHwnd(winId)) {
-				this._hideAll()
-				return
-			}
-		}
 	}
 	_onKeyboardInput(ih, EndReason := "") {
 		if (!this._isAnyVisible()) {

@@ -97,7 +97,7 @@ app.ahk (entry point)
 | `meta.ahk` | Single source of truth for app name, version, binary filename, download URL, changelog |
 | `ahko.ahk` | Core logic. Reads `setting.ini`, scans watch folder (2 levels, 16 items max per level), builds item array. Detects UAC mode (`A_IsAdmin`), provides `ahko_invoke` wrapper that falls back to setup GUI when grid is empty in UAC mode |
 | `ahko_ui.ahk` | Thin dispatcher: initializes grid view class with GDIp rendering |
-| `ahko_gridview_ui.ahk` | Main UI. Keyboard-driven grid overlay with 16-button layout using GDIp rendering. Includes misfire detection. In UAC mode, title bar includes a "More" button that shows `A_TrayMenu` as a popup context menu |
+| `ahko_gridview_ui.ahk` | Main UI. Keyboard-driven grid overlay with 16-button layout using GDIp rendering. Includes misfire detection via `WH_MOUSE_LL` press-edge hook and InputHook. In UAC mode, title bar includes a "More" button that shows `A_TrayMenu` as a popup context menu |
 | `setup/ahko_setup_gui.ahk` | Settings GUI via [ahk-xaml](https://github.com/owhs/ahk-xaml). WPF window with AXML layout. Fields: watch folder, hotkey (+ Win), display monitor, fullscreen toggle, auto-start. Show/hide via `WinShow`/`WinHide` on WPF HWND. Logic mirrors pre-GDIp native setup |
 | `setup/setup.axml` | Declarative AXML markup for setup form layout and control bindings |
 | `lib/ahk-xaml/` | Vendored third-party WPF UI framework; do not modify unless the task requires it |
@@ -116,7 +116,7 @@ app.ahk (entry point)
 3. **Keyboard-centric grid UI** - 16 keys (`1,2,3,q,w,e,a,s,d,4,r,f,z,x,c,v`) mapped to staggered grid; backtick goes up, Esc hides
 4. **Custom icon convention** - `_icon.png` for folder icons, `<name>.png` for item icons, `[key]` filename prefix for key assignment
 5. **Self-updating** - Checks GitHub releases, downloads zip, uses compiled C binary for file extraction
-6. **Misfire detection** - Timer-based mouse click and InputHook keyboard monitoring; auto-hides ahko window on unrelated input
+6. **Misfire detection** - Low-level mouse hook (`WH_MOUSE_LL`) on button-down edges plus InputHook keyboard monitoring; auto-hides ahko window on unrelated input
 7. **ahk-xaml setup GUI** - Setup uses vendored WPF framework with AXML layout; launcher grid remains GDIp
 8. **UAC mode fallback** - When running elevated (`A_IsAdmin`), system tray is invisible (Session 0). Grid title bar gets a "More" button to access tray menu as a popup. Empty grid in UAC mode auto-opens setup GUI instead
 9. **Git submodule for toolchain** - `ahk-compile-toolset` bundles compiler and runtime
