@@ -17,9 +17,9 @@ If unsure whether a change is substantive, update AGENTS.md anyway — stale doc
 ## Project DNA
 
 - **Purpose**: 4×4 keyboard-driven grid launcher scanning a user-configured watch folder. Supports subfolders, custom openers, AppImage spawn on Linux.
-- **Backend**: Rust single-file (`src-tauri/src/lib.rs`, ~436 lines). All types, config, scanning, launch logic, window management, and tray in one module.
+- **Backend**: Rust single-file (`src-tauri/src/lib.rs`, ~613 lines). All types, config, scanning, launch logic, window management, and tray in one module.
 - **Frontend**: SvelteKit SPA (SSR disabled, `adapter-static`). Two routes: main launcher (`+page.svelte`) and setup window (`setup/+page.svelte`).
-- **IPC**: Tauri `invoke()` for commands (`load_config`, `save_config`, `scan_launcher`, `launch_item`, `hide_window`, `open_setup_window`). Tauri events (`config-changed`, `reload-request`, `show-request`) for push notifications Rust → frontend.
+- **IPC**: Tauri `invoke()` for commands (`load_config`, `save_config`, `scan_launcher`, `launch_item`, `hide_window`, `open_setup_window`, `list_monitors`, `get_platform_capabilities`). Tauri events (`config-changed`, `reload-request`, `show-request`, `monitors-changed`) for push notifications Rust → frontend.
 - **Config**: JSON at `{OS_config_dir}/rusto/config.json`. Types mirror between Rust structs and TypeScript (camelCase serde).
 
 ## Architecture
@@ -47,7 +47,7 @@ src-tauri/
 
 - **Single-file backend**: No Rust module splitting. Keep all logic in `lib.rs`.
 - **Error handling**: `Result<T, String>` with `.map_err(|e| e.to_string())`. No custom error types.
-- **Window model**: Main launcher is a frameless transparent webview sized to the cursor monitor's `work_area` (Kando-style). Setup opens as a separate frameless transparent window with in-app title bar (drag + close). Tiles are opaque DOM elements.
+- **Window model**: Main launcher is a frameless transparent webview sized to a monitor `work_area` (Kando-style). `show_at` config selects monitor: `mouse` (cursor), `focus` (active window via `active-win-pos-rs`), or `fixed` (`show_monitor_id`). **Linux Wayland**: compositor blocks `set_position`; launcher screen settings are saved but ineffective until X11 session or upstream Tauri support. Monitor list refreshes on startup and when displays change (`monitors-changed` event). Setup opens as a separate frameless transparent window with in-app title bar (drag + close). Tiles are opaque DOM elements.
 - **Svelte 5 runes only**: Use `$state`, `$derived`, `$derived.by`. No legacy reactive `$:` syntax.
 - **Naming**: Rust `snake_case`, TypeScript `camelCase`, CSS/Tailwind `kebab-case`.
 
@@ -71,13 +71,13 @@ cargo check            # Rust type check (run after Rust changes, in src-tauri/)
 - **Config sync**: Rust `AppConfig`/`CustomOpener`/`LauncherItem` structs must stay in sync with TypeScript type definitions in Svelte files.
 - **Key assignment**: Folder items use `[key]name` naming convention. Keys are from `ITEM_KEYS` array in `lib.rs`.
 - **Window behavior**: Main window hides on blur. `current` folder state resets before hide. Pointerdown outside filled tiles triggers hide.
-- **Platform awareness**: Linux skips wake hotkey in setup UI. AppImage gets direct detached spawn. Tray creation failure is non-fatal.
+- **Platform awareness**: Linux skips wake hotkey in setup UI. AppImage gets direct detached spawn. Tray creation failure is non-fatal. Linux Wayland: show launcher-screen limitation via `get_platform_capabilities`.
 
 ## Dependencies (Do Not Assume Availability)
 
 - **Always verify** a crate/package exists in `Cargo.toml` or `package.json` before importing.
 - Tauri plugins: `tauri-plugin-opener`, `tauri-plugin-single-instance` (registered in `lib.rs`).
-- Rust crates: `serde`, `serde_json`, `dirs`, `open`, `mouse_position`.
+- Rust crates: `serde`, `serde_json`, `dirs`, `open`, `mouse_position`, `active-win-pos-rs`.
 - Frontend: `@tauri-apps/api`, `@tauri-apps/plugin-opener`, Tailwind v4 via `@tailwindcss/vite`.
 
 ## Critical Self-Sync Rule

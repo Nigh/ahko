@@ -12,6 +12,7 @@
     back_hotkey: string;
     hide_hotkey: string;
     show_at: string;
+    show_monitor_id: string;
     enable_in_fullscreen: boolean;
     autostart: boolean;
     custom_openers: CustomOpener[];
@@ -68,6 +69,7 @@
     back_hotkey: "`",
     hide_hotkey: "Esc",
     show_at: "mouse",
+    show_monitor_id: "",
     enable_in_fullscreen: false,
     autostart: false,
     custom_openers: defaultCustomOpeners(),
