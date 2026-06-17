@@ -708,7 +708,10 @@ class XAMLHost {
         }
 
         if !FileExist(targetExe) {
-            MsgBox("Fatal Error: Could not locate " baseDllName " to perform compilation.", "AHK-XAML", "Iconx")
+            if (EnvGet("CI") = "true")
+                FileAppend("ERROR: Could not locate " baseDllName " to perform compilation.`n", "*")
+            else
+                MsgBox("Fatal Error: Could not locate " baseDllName " to perform compilation.", "AHK-XAML", "Iconx")
             return
         }
 
@@ -759,8 +762,10 @@ class XAMLHost {
                 }
                 wvDef := ' /define:ENABLE_WEBVIEW'
             } else {
-                ToolTip("WebView2 DLLs not found in lib\dep\WebView2. Compiling without WebView2 support.")
-                SetTimer(() => ToolTip(), -4000)
+                if !isCI {
+                    ToolTip("WebView2 DLLs not found in lib\dep\WebView2. Compiling without WebView2 support.")
+                    SetTimer(() => ToolTip(), -4000)
+                }
             }
         }
 
@@ -776,8 +781,10 @@ class XAMLHost {
                 }
                 aeDef := ' /define:ENABLE_AVALONEDIT'
             } else {
-                ToolTip("AvalonEdit DLL not found in lib\dep\AvalonEdit. Compiling without IDE support.")
-                SetTimer(() => ToolTip(), -4000)
+                if !isCI {
+                    ToolTip("AvalonEdit DLL not found in lib\dep\AvalonEdit. Compiling without IDE support.")
+                    SetTimer(() => ToolTip(), -4000)
+                }
             }
         }
 
@@ -815,8 +822,10 @@ class XAMLHost {
                 }
                 docDef := ' /define:ENABLE_DOCUMENT'
             } else {
-                ToolTip("OpenXml DLL not found in lib\dep\OpenXml. Compiling without Document Editor support.")
-                SetTimer(() => ToolTip(), -4000)
+                if !isCI {
+                    ToolTip("OpenXml DLL not found in lib\dep\OpenXml. Compiling without Document Editor support.")
+                    SetTimer(() => ToolTip(), -4000)
+                }
             }
         }
 
@@ -933,8 +942,12 @@ class XAMLHost {
 
 
     BundleCustomEngine(targetExe) {
+        isCI := (EnvGet("CI") = "true")
         if (A_IsCompiled) {
-            MsgBox("AHK-XAML: Dynamic compilation is not available when the script is compiled. Please compile the engine separately.")
+            if isCI
+                FileAppend("ERROR: AHK-XAML: Dynamic compilation is not available when the script is compiled.`n", "*")
+            else
+                MsgBox("AHK-XAML: Dynamic compilation is not available when the script is compiled. Please compile the engine separately.")
             return
         }
         ; If running in /build mode, write AXML metadata directly to the source script for standalone compiled execution
@@ -1018,12 +1031,17 @@ class XAMLHost {
         if FileExist(tempBaml) {
             resList.Push(tempBaml)
         } else {
-            ToolTip("Warning: BAML compilation failed. Falling back to XAML bundling...")
-            SetTimer(() => ToolTip(), -3000)
+            if !isCI {
+                ToolTip("Warning: BAML compilation failed. Falling back to XAML bundling...")
+                SetTimer(() => ToolTip(), -3000)
+            }
             if FileExist(tempXaml) {
                 resList.Push(tempXaml)
             } else {
-                MsgBox("Failed to bundle custom engine: XAML payload file not found.", "AHK-XAML", "Iconx")
+                if isCI
+                    FileAppend("ERROR: Failed to bundle custom engine: XAML payload file not found.`n", "*")
+                else
+                    MsgBox("Failed to bundle custom engine: XAML payload file not found.", "AHK-XAML", "Iconx")
                 return false
             }
         }
@@ -1047,7 +1065,10 @@ class XAMLHost {
         }
         try FileDelete(targetExe)
         if FileExist(targetExe) {
-            MsgBox("Error: The target DLL '" targetName "' is locked by a running process.`n`nPlease close all running instances of your application and try building again.", "Build Error", "Iconx")
+            if isCI
+                FileAppend("ERROR: The target DLL '" targetName "' is locked by a running process.`n", "*")
+            else
+                MsgBox("Error: The target DLL '" targetName "' is locked by a running process.`n`nPlease close all running instances of your application and try building again.", "Build Error", "Iconx")
             return false
         }
 
@@ -1092,7 +1113,10 @@ class XAMLHost {
         if (A_IsCompiled && FileExist(A_ScriptDir "\" baseDllName)) {
             targetExe := A_ScriptDir "\" baseDllName
         } else if (A_IsCompiled) {
-            MsgBox("Error: The companion DLL '" baseDllName "' was not found side-by-side with the executable.`n`nPlease ensure '" baseDllName "' is in the same directory as '" A_ScriptName "'.", "AHK-XAML", "Iconx AlwaysOnTop")
+            if (EnvGet("CI") = "true")
+                FileAppend("ERROR: Companion DLL '" baseDllName "' not found.`n", "*")
+            else
+                MsgBox("Error: The companion DLL '" baseDllName "' was not found side-by-side with the executable.`n`nPlease ensure '" baseDllName "' is in the same directory as '" A_ScriptName "'.", "AHK-XAML", "Iconx AlwaysOnTop")
             return ""
         } else if (!A_IsCompiled) {
             sourceCs := libDir "\dep\XAML_AHK_Bridge.cs"
@@ -1138,7 +1162,10 @@ class XAMLHost {
             }
 
             if (this.exePath != "" && !FileExist(targetExe)) {
-                MsgBox("Custom Engine DLL not found: " targetExe, "AHK-XAML", "Iconx")
+                if (EnvGet("CI") = "true")
+                    FileAppend("ERROR: Custom Engine DLL not found: " targetExe "`n", "*")
+                else
+                    MsgBox("Custom Engine DLL not found: " targetExe, "AHK-XAML", "Iconx")
                 return ""
             }
 
@@ -1716,26 +1743,39 @@ class XAMLHost {
     }
 
     SkipPropertyAndRetry(errorMsg, lineNum, colNum) {
+        isCI := (EnvGet("CI") = "true")
         if (lineNum <= 0 || colNum <= 0) {
-            MsgBox("Could not locate the exact error position to skip the property.", "Skip Failed", "Iconx")
+            if isCI
+                FileAppend("ERROR: Could not locate the exact error position to skip the property.`n", "*")
+            else
+                MsgBox("Could not locate the exact error position to skip the property.", "Skip Failed", "Iconx")
             return false
         }
 
         charIndex := this.GetCharIndex(this.xaml, lineNum, colNum)
         if (charIndex <= 0) {
-            MsgBox("Error position out of bounds.", "Skip Failed", "Iconx")
+            if isCI
+                FileAppend("ERROR: Error position out of bounds.`n", "*")
+            else
+                MsgBox("Error position out of bounds.", "Skip Failed", "Iconx")
             return false
         }
 
         elem := this.FindElementBoundaries(this.xaml, charIndex)
         if (!elem) {
-            MsgBox("Could not find the element at the error line.", "Skip Failed", "Iconx")
+            if isCI
+                FileAppend("ERROR: Could not find the element at the error line.`n", "*")
+            else
+                MsgBox("Could not find the element at the error line.", "Skip Failed", "Iconx")
             return false
         }
 
         openingTagEnd := InStr(this.xaml, ">", , elem.start)
         if (!openingTagEnd || openingTagEnd > elem.end) {
-            MsgBox("Malformed element opening tag.", "Skip Failed", "Iconx")
+            if isCI
+                FileAppend("ERROR: Malformed element opening tag.`n", "*")
+            else
+                MsgBox("Malformed element opening tag.", "Skip Failed", "Iconx")
             return false
         }
         openingTag := SubStr(this.xaml, elem.start, openingTagEnd - elem.start + 1)
@@ -1756,41 +1796,58 @@ class XAMLHost {
         }
 
         if (!removed) {
-            MsgBox("Could not automatically identify the property to skip from error: " errorMsg, "Skip Failed", "Iconx")
+            if (EnvGet("CI") = "true")
+                FileAppend("ERROR: Could not automatically identify the property to skip from error: " errorMsg "`n", "*")
+            else
+                MsgBox("Could not automatically identify the property to skip from error: " errorMsg, "Skip Failed", "Iconx")
             return false
         }
 
         this.xaml := SubStr(this.xaml, 1, elem.start - 1) . openingTag . SubStr(this.xaml, openingTagEnd + 1)
 
-        ToolTip("Skipped property: " candidateName)
-        SetTimer(() => ToolTip(), -3000)
+        if (EnvGet("CI") != "true") {
+            ToolTip("Skipped property: " candidateName)
+            SetTimer(() => ToolTip(), -3000)
+        }
 
         SetTimer(() => this.Show(), -10)
         return true
     }
 
     SkipElementAndRetry(errorMsg, lineNum, colNum) {
+        isCI := (EnvGet("CI") = "true")
         if (lineNum <= 0 || colNum <= 0) {
-            MsgBox("Could not locate the exact error position to skip the element.", "Skip Failed", "Iconx")
+            if isCI
+                FileAppend("ERROR: Could not locate the exact error position to skip the element.`n", "*")
+            else
+                MsgBox("Could not locate the exact error position to skip the element.", "Skip Failed", "Iconx")
             return false
         }
 
         charIndex := this.GetCharIndex(this.xaml, lineNum, colNum)
         if (charIndex <= 0) {
-            MsgBox("Error position out of bounds.", "Skip Failed", "Iconx")
+            if isCI
+                FileAppend("ERROR: Error position out of bounds.`n", "*")
+            else
+                MsgBox("Error position out of bounds.", "Skip Failed", "Iconx")
             return false
         }
 
         elem := this.FindElementBoundaries(this.xaml, charIndex)
         if (!elem) {
-            MsgBox("Could not find the element to skip at the error line.", "Skip Failed", "Iconx")
+            if isCI
+                FileAppend("ERROR: Could not find the element to skip at the error line.`n", "*")
+            else
+                MsgBox("Could not find the element to skip at the error line.", "Skip Failed", "Iconx")
             return false
         }
 
         this.xaml := SubStr(this.xaml, 1, elem.start - 1) . SubStr(this.xaml, elem.end + 1)
 
-        ToolTip("Skipped element: <" elem.tag ">")
-        SetTimer(() => ToolTip(), -3000)
+        if !isCI {
+            ToolTip("Skipped element: <" elem.tag ">")
+            SetTimer(() => ToolTip(), -3000)
+        }
 
         SetTimer(() => this.Show(), -10)
         return true
