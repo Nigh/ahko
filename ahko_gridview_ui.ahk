@@ -396,24 +396,25 @@ class ahko_gridview_class
 		}
 	}
 	_startMouseHook() {
-		this._mouseHookProc := CallbackCreate(this._mouseHook.Bind(this), "F", 3)
+		this._mouseHookProc := CallbackCreate(ObjBindMethod(this, "_mouseHookCallback"), , 3)
 		this._mouseHook := DllCall(
 			"SetWindowsHookEx", "Int", 14,
 			"Ptr", this._mouseHookProc,
 			"Ptr", DllCall("GetModuleHandle", "Ptr", 0, "Ptr"),
 			"UInt", 0, "Ptr")
 	}
-	_mouseHook(nCode, wParam, lParam) {
+	_mouseHookCallback(nCode, wParam, lParam) {
 		if (nCode >= 0 && this._isAnyVisible()) {
 			if (wParam = 0x0201 || wParam = 0x0204) {
 				x := NumGet(lParam, 0, "Int")
 				y := NumGet(lParam, 4, "Int")
 				targetHwnd := DllCall("WindowFromPoint", "Int64", (y << 32) | (x & 0xFFFFFFFF), "Ptr")
 				if (!this._isAhkoHwnd(targetHwnd))
-					SetTimer(() => this._hideAll(), -0)
+					this._hideAll()
 			}
 		}
-		return DllCall("CallNextHookEx", "Ptr", this._mouseHook, "Int", nCode, "Ptr", wParam, "Int64", lParam, "Ptr")
+		hook := this._mouseHook ? this._mouseHook : 0
+		return DllCall("CallNextHookEx", "Ptr", hook, "Int", nCode, "Ptr", wParam, "Ptr", lParam, "Ptr")
 	}
 	_startKeyboardHook() {
 		this._ih := InputHook("L")
