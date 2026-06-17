@@ -1,10 +1,37 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, "Cascadia Code", monospace;
+
+  --color-base-100: oklch(26% 0 0);
+  --color-base-200: oklch(20% 0 0);
+  --color-base-300: oklch(37% 0 0);
+  --color-base-content: oklch(96% 0.001 286.375);
+  --color-primary: oklch(81% 0.117 11.638);
+  --color-primary-content: oklch(26% 0 0);
+  --color-secondary: oklch(82% 0.119 306.383);
+  --color-secondary-content: oklch(26% 0 0);
+  --color-accent: oklch(80% 0.08 185);
+  --color-accent-content: oklch(26% 0 0);
+  --color-neutral: #44403c;
+  --color-neutral-content: oklch(98% 0 0);
+  --color-info: oklch(75% 0.1 250);
+  --color-success: oklch(75% 0.1 150);
+  --color-warning: oklch(82% 0.14 85);
+  --color-error: oklch(70% 0.18 25);
+
+  --radius-box: 0.5rem;
+  --radius-field: 0.5rem;
+}
+
 html,
 body {
   margin: 0;
   min-height: 100%;
   background: transparent;
+  font-family: var(--font-sans);
 }
 
 button,
